@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "datashare-spacy-worker"
+version = "0.1.0"
+description = "Spacy NLP worker for Datashare"
+authors = ["Clément Doumouro <cdoumouro@icij.org>"]
+readme = "README.md"
+packages = [{ include = "spacy_worker" }]
+exclude = ["spacy_worker/tests"]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+pytest-asyncio = "^0.24.0"
+
+requests = "^2.32.3"
+[tool.setuptools.packages.find]
+where = ["spacy_worker/data/*.json"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+icij-worker = {extras = ["amqp"], version = "^0.9.9"}
+# TODO: it seems that wheels are not built for spacy >= 3.7.6 for ARM
+# TODO: remove transformers if not needed
+# TODO: optionnally add CUDA support for when a GPU is available
+spacy = { version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "transformers"] }
+spacy-curated-transformers = "^0.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+markers = [
+    "pretest: test which will run before unit test",
+]

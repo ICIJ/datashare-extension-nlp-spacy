@@ -1,0 +1,1 @@
+# Spacy Python worker for Datashare
