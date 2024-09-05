@@ -1,0 +1,23 @@
+name: Linting test for datashare-spacy-worker
+
+on:
+  push:
+    branches: [ 'main' ]
+  pull_request:
+    paths:
+      - 'datashare-spacy-worker/**.py'
+      - '.github/workflows/*-worker.yml'
+
+# TODO: leverage some caching here
+jobs:
+  linting-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/pylint
+        with:
+          path: datashare-spacy-worker
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
