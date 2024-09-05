@@ -143,7 +143,7 @@ def _spacy_doc_to_ds_named_entities(
     doc: SpacyDoc, supported_categories: Set[Category], label_scheme: NERLabelScheme
 ) -> List[NamedEntity]:
     ents = (
-        _spacy_doc_to_named_entity(ent, doc.text, supported_categories, label_scheme)
+        _spacy_doc_to_named_entity(ent, supported_categories, label_scheme)
         for ent in doc.ents
     )
     return [ent for ent in ents if ent is not None]
@@ -151,7 +151,6 @@ def _spacy_doc_to_ds_named_entities(
 
 def _spacy_doc_to_named_entity(
     ent: Span,
-    text: str,
     supported_categories: Set[Category],
     label_scheme: NERLabelScheme,
 ) -> Optional[NamedEntity]:
@@ -160,5 +159,4 @@ def _spacy_doc_to_named_entity(
         return None
     start = ent.start_char
     end = ent.end_char
-    text = text[start:end]
-    return NamedEntity(start=start, text=text, category=category)
+    return NamedEntity(start=start, end=end, category=category)

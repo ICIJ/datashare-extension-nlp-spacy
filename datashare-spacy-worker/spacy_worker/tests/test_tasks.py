@@ -17,15 +17,28 @@ _doc_1 = "some short document"
 
 
 @pytest.mark.parametrize(
+    "model,expected_n_process", [("en_core_web_sm", 665), ("en_core_web_trf", 1)]
+)
+def test_get_n_process(model: str, expected_n_process: int):
+    # Given
+    max_process = 666
+    language = spacy.load(model)
+    # When
+    n_process = get_n_process(language, max_process)
+    # Then
+    assert n_process == expected_n_process
+
+
+@pytest.mark.parametrize(
     "categories,expected_entities",
     [
         (
             None,
             [
                 [
-                    NamedEntity(start=57, text="Dan", category=Category.PER),
-                    NamedEntity(start=93, text="Paris", category=Category.LOC),
-                    NamedEntity(start=146, text="Intel", category=Category.ORG),
+                    NamedEntity(start=57, end=60, category=Category.PER),
+                    NamedEntity(start=93, end=98, category=Category.LOC),
+                    NamedEntity(start=146, end=151, category=Category.ORG),
                 ],
                 [],
             ],
@@ -34,9 +47,9 @@ _doc_1 = "some short document"
             ["LOCATION", "PERSON", "ORGANIZATION"],
             [
                 [
-                    NamedEntity(start=57, text="Dan", category=Category.PER),
-                    NamedEntity(start=93, text="Paris", category=Category.LOC),
-                    NamedEntity(start=146, text="Intel", category=Category.ORG),
+                    NamedEntity(start=57, end=60, category=Category.PER),
+                    NamedEntity(start=93, end=98, category=Category.LOC),
+                    NamedEntity(start=146, end=151, category=Category.ORG),
                 ],
                 [],
             ],
@@ -45,7 +58,7 @@ _doc_1 = "some short document"
             ["LOCATION"],
             [
                 [
-                    NamedEntity(start=93, text="Paris", category=Category.LOC),
+                    NamedEntity(start=93, end=98, category=Category.LOC),
                 ],
                 [],
             ],
@@ -66,16 +79,3 @@ async def test_spacy_ner_task(
 
     # Then
     assert entities == expected_entities
-
-
-@pytest.mark.parametrize(
-    "model,expected_n_process", [("en_core_web_sm", 665), ("en_core_web_trf", 1)]
-)
-def test_get_n_process(model: str, expected_n_process: int):
-    # Given
-    max_process = 666
-    language = spacy.load(model)
-    # When
-    n_process = get_n_process(language, max_process)
-    # Then
-    assert n_process == expected_n_process

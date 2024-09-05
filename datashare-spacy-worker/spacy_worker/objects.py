@@ -16,7 +16,7 @@ class Category(str, Enum):
 
 class NamedEntity(LowerCamelCaseModel):
     start: int
-    text: str
+    end: int
     category: Category
 
 
