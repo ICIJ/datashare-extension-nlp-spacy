@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 import json
 
 import pytest
@@ -46,7 +47,7 @@ def test_spacy_model_compatibility():
         "https://raw.githubusercontent.com/explosion/spacy-models/"
         "master/compatibility.json"
     )
-    r = requests.get(compatibility_url)
+    r = requests.get(compatibility_url)  # pylint: disable=missing-timeout
     r.raise_for_status()
     version = Version(spacy.__version__)
     version = f"{version.major}.{version.minor}"
@@ -54,6 +55,6 @@ def test_spacy_model_compatibility():
     models = json.loads(_MODEL_PATH.read_text())
 
     # Then
-    for language, model in models.items():
+    for model in models.values():
         compatible_versions = version_compatibility[model["model"]]
         assert model["version"] in compatible_versions

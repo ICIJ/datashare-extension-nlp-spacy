@@ -115,6 +115,7 @@ class SpacyProvider:
         return sent_split
 
     def _load_nlp(self, language: str, *, size: SpacySize) -> Language:
+        # pylint: disable=method-hidden
         logger.debug("loading spacy for %s...", language)
         size = size.value
         model = self._models[language]["sizes"][size]

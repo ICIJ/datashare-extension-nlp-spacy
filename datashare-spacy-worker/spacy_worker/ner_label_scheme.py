@@ -178,6 +178,7 @@ def greek_label_to_ds(label: str) -> Optional[Category]:
         case _:
             raise ValueError(f"Unexpected value {label}")
 
+
 def japanese_label_to_ds(label: str) -> Optional[Category]:
     match label:
         case "LOC" | "GPE" | "FAC" | "EVENT":
@@ -192,7 +193,8 @@ def japanese_label_to_ds(label: str) -> Optional[Category]:
             return Category.ORG
         case "MONEY":
             return Category.MONEY
-        case "LANGUAGE" | "PRODUCT" | "LAW" | "PET_NAME" | "PHONE" | "TITLE_AFFIX" | "WORK_OF_ART":
+        case "LANGUAGE" | "PRODUCT" | "LAW" | "PET_NAME" | "PHONE" | "TITLE_AFFIX" | \
+             "WORK_OF_ART":
             return None
         case _:
             raise ValueError(f"Unexpected value {label}")
@@ -208,10 +210,11 @@ def lithuanian_label_to_ds(label: str) -> Optional[Category]:
             return Category.PER
         case "PRODUCT":
             return None
-        case "TIME" :
+        case "TIME":
             return Category.DATE
         case _:
             raise ValueError(f"Unexpected value {label}")
+
 
 def norwegian_label_to_ds(label: str) -> Optional[Category]:
     match label:
@@ -221,7 +224,7 @@ def norwegian_label_to_ds(label: str) -> Optional[Category]:
             return Category.ORG
         case "PER":
             return Category.PER
-        case "DRV" | "MISC" | "PROD": # This could probably be person ?
+        case "DRV" | "MISC" | "PROD":  # This could probably be person ?
             return None
 
 
@@ -244,6 +247,7 @@ def onto_notes_5_label_to_ds(label: str) -> Optional[Category]:
         case _:
             raise ValueError(f"Unexpected value {label}")
 
+
 def polish_label_to_ds(label: str) -> Optional[Category]:
     match label:
         case "date" | "time":
@@ -256,6 +260,7 @@ def polish_label_to_ds(label: str) -> Optional[Category]:
             return Category.PER
         case _:
             raise ValueError(f"Unexpected value {label}")
+
 
 def romanian_label_to_ds(label: str) -> Optional[Category]:
     match label:
@@ -275,6 +280,7 @@ def romanian_label_to_ds(label: str) -> Optional[Category]:
             return None
         case _:
             raise ValueError(f"Unexpected value {label}")
+
 
 def russian_label_to_ds(label: str) -> Optional[Category]:
     match label:

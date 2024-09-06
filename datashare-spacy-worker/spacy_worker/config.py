@@ -1,4 +1,4 @@
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List
 
 from icij_common.pydantic_utils import ICIJSettings, NoEnumModel
 from icij_worker.utils.logging_ import LogWithWorkerIDMixin

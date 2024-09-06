@@ -38,6 +38,7 @@ def lifespan_config() -> AppConfig:
 
 
 def spacy_provider_enter(**_):
+    # pylint: disable=unnecessary-dunder-call
     config = lifespan_config()
     global _SPACY_PROVIDER
     _SPACY_PROVIDER = config.to_provider()
@@ -45,6 +46,7 @@ def spacy_provider_enter(**_):
 
 
 def spacy_provider_exit(exc_type, exc_val, exc_tb):
+    # pylint: disable=unnecessary-dunder-call
     config = lifespan_config()
     global _SPACY_PROVIDER
     _SPACY_PROVIDER = config.to_provider()
