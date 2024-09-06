@@ -1,4 +1,4 @@
-name: Publish Spacy workers
+name: Publish release assets
 
 on:
   push:
@@ -6,7 +6,38 @@ on:
       - '*'
 
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release
+        run: Create GH release 
+          gh release create "$tag" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+
+  publish-extension:
+    needs: [ create-release ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      - name: Build with Maven
+        run: mvn -B package --update-snapshots --file pom.xml
+      - name: Push JARs to release
+        run: Create GH release
+          gh release upload "$tag" "datashare-extension-nlp-spacy-$tag-jar-with-dependencies.jar"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+
   publish-worker:
+    needs: [ create-release ]
     runs-on: ubuntu-latest
     steps:
       - name: Docker meta
@@ -37,6 +68,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   publish-worker-transformers:
+    needs: [ create-release ]
     runs-on: ubuntu-latest
     steps:
       - name: Docker meta
@@ -68,4 +100,4 @@ jobs:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
