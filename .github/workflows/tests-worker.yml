@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: poetry
-      - run: cd datashare-spacy-worker && poetry install -v --with dev --all-extras --sync
+      - run: cd datashare-spacy-worker && poetry install -v --with dev --sync
       - name: Run tests
         run: |
           cd datashare-spacy-worker
