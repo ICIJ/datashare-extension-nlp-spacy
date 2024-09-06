@@ -2,12 +2,16 @@
 FROM python:3.11-slim-bullseye AS worker-base
 ARG n_workers
 ENV HOME=/home/user
-RUN apt-get update && apt-get install -y curl
+ENV ICIJ_WORKER_TYPE=amqp
+
+RUN apt-get update && apt-get install -y build-essential curl
 
 ENV POETRY_HOME=$HOME/.local/share/pypoetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="$POETRY_HOME/bin:$PATH"
-ENV ICIJ_WORKER_TYPE=amqp
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="$HOME/.cargo/bin:$PATH"
 
 WORKDIR $HOME/src/app
 ADD datashare-spacy-worker/  ./datashare-spacy-worker/
