@@ -27,9 +27,14 @@ jobs:
           python-version: "3.11"
           cache: poetry
       - run: cd datashare-spacy-worker && poetry install -v --with dev --sync
+      - name: Run tests model file
+        run: |
+          cd datashare-spacy-worker
+          pwd
+          ls ../data/models.json
+          ls spacy_worker/data/models.json
       - name: Run tests
         run: |
-          cp data/models.json datashare-spacy-worker/spacy_worker/data
           cd datashare-spacy-worker
           poetry run python -m pytest -vvv --cache-clear --show-capture=all -r A .
 
