@@ -78,13 +78,14 @@ _SWEDISH = ("EVN", "LOC", "MSR", "OBJ", "ORG", "PRS", "TME", "WRK")
 
 
 class SortedValuesEnumMeta(EnumType):
-    def __call__(cls, value, *args, **kw):
+    def __call__(cls, value, *args, **kw):  # pylint: disable=no-self-argument
         value = tuple(sorted(value))
         return super().__call__(value, *args, **kw)
 
 
 @unique
 class NERLabelScheme(tuple, Enum, metaclass=SortedValuesEnumMeta):
+    # pylint: disable=invalid-metaclass
     CONLL = _CONLL
     CROATIAN_SLOVENIAN = _CROATIAN_SLOVENIAN
     GREEK = _GREEK
