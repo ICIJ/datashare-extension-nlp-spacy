@@ -10,20 +10,29 @@ exclude = ["spacy_worker/tests"]
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
 pytest-asyncio = "^0.24.0"
-
 requests = "^2.32.3"
+
 [tool.setuptools.packages.find]
 where = ["spacy_worker/data/*.json"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 
-icij-worker = {extras = ["amqp"], version = "^0.9.9"}
+icij-worker = { extras = ["amqp"], version = "^0.9.9" }
 # TODO: it seems that wheels are not built for spacy >= 3.7.6 for ARM
-# TODO: remove transformers if not needed
 # TODO: optionnally add CUDA support for when a GPU is available
-spacy = { version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "transformers"] }
-spacy-curated-transformers = "^0.2.2"
+spacy = [
+    { platform = "darwin", version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "apple"] },
+    { version = ">3.7,<3.7.6", extras = ["ja", "ko", "th"] },
+    { platform = "darwin", version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "transformers", "apple"], markers = "extra == 'transformers'"},
+    { version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "transformers"], markers = "extra == 'transformers'"}
+]
+spacy-curated-transformers = { version = "^0.2.2", optional = true }
+
+[tool.poetry.extras]
+transformers = [
+    "spacy-curated-transformers"
+]
 
 [build-system]
 requires = ["poetry-core"]
