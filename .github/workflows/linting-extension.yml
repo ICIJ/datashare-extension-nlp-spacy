@@ -21,7 +21,7 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: |
-        mvn validate
+        mvn -B validate
         mvn checkstyle:check
 
 concurrency:
