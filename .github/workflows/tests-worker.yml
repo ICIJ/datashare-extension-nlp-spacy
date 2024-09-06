@@ -27,14 +27,10 @@ jobs:
           python-version: "3.11"
           cache: poetry
       - run: cd datashare-spacy-worker && poetry install -v --with dev --sync
-      - name: Run tests model file
-        run: |
-          cd datashare-spacy-worker
-          pwd
-          ls ../data/models.json
-          ls spacy_worker/data/models.json
+      # Poetry doesn't support symlinks to outside of the project so we have to force copy the models.json
       - name: Run tests
         run: |
+          cp -f data/models.json datashare-spacy-worker/spacy_worker/data
           cd datashare-spacy-worker
           poetry run python -m pytest -vvv --cache-clear --show-capture=all -r A .
 
