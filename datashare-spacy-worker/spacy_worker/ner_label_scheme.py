@@ -74,16 +74,7 @@ _ROMANIAN = (
     "WORK_OF_ART",
 )
 _RUSSIAN = ("LOC", "ORG", "PER")
-_SWEDISH = (
-    "EVN",
-    "LOC",
-    "MSR",
-    "OBJ",
-    "ORG",
-    "PRS",
-    "TME",
-    "WRK"
-)
+_SWEDISH = ("EVN", "LOC", "MSR", "OBJ", "ORG", "PRS", "TME", "WRK")
 
 
 class SortedValuesEnumMeta(EnumType):
@@ -193,8 +184,15 @@ def japanese_label_to_ds(label: str) -> Optional[Category]:
             return Category.ORG
         case "MONEY":
             return Category.MONEY
-        case "LANGUAGE" | "PRODUCT" | "LAW" | "PET_NAME" | "PHONE" | "TITLE_AFFIX" | \
-             "WORK_OF_ART":
+        case (
+            "LANGUAGE"
+            | "PRODUCT"
+            | "LAW"
+            | "PET_NAME"
+            | "PHONE"
+            | "TITLE_AFFIX"
+            | "WORK_OF_ART"
+        ):
             return None
         case _:
             raise ValueError(f"Unexpected value {label}")
