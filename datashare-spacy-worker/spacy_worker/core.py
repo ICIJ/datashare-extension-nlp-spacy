@@ -53,8 +53,6 @@ async def spacy_ner(
 ) -> Generator[List[NamedEntity], None, None]:
     if progress is not None:
         progress = to_raw_progress(progress, max_progress=len(texts))
-    if not any(c == "transformer" for c in ner.pipe_names):
-        batch_size = None
     label_scheme = NERLabelScheme(tuple(ner.pipe_labels.get("ner")))
     # TODO: for better NER performance, it could be nicer have chunks for several
     #  sentence rather than just sentence by sentence
