@@ -47,10 +47,9 @@ def spacy_provider_enter(**_):
 
 def spacy_provider_exit(exc_type, exc_val, exc_tb):
     # pylint: disable=unnecessary-dunder-call
-    config = lifespan_config()
+    lifespan_spacy_provider().__exit__(exc_type, exc_val, exc_tb)
     global _SPACY_PROVIDER
-    _SPACY_PROVIDER = config.to_provider()
-    _SPACY_PROVIDER.__exit__(exc_type, exc_val, exc_tb)
+    _SPACY_PROVIDER = None
 
 
 def lifespan_spacy_provider() -> SpacyProvider:
