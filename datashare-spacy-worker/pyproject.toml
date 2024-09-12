@@ -19,11 +19,13 @@ icij-worker = { extras = ["amqp"], version = "^0.9.9" }
 spacy = [
     { platform = "darwin", version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "apple"] },
     { version = ">3.7,<3.7.6", extras = ["ja", "ko", "th"] },
-    { platform = "darwin", version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "transformers", "apple"], markers = "extra == 'transformers'"},
-    { version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "transformers"], markers = "extra == 'transformers'"}
+    { platform = "darwin", version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "transformers", "apple"], markers = "extra == 'transformers'" },
+    { version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "transformers"], markers = "extra == 'transformers'" }
 ]
+elasticsearch = { version = "^7.17.9", extras = ["async"] }
 spacy-curated-transformers = { version = "^0.2.2", optional = true }
 
+tenacity = "^9.0.0"
 [tool.poetry.extras]
 transformers = [
     "spacy-curated-transformers"
