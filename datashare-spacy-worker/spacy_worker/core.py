@@ -107,7 +107,7 @@ class SpacyProvider:
         return self._load_nlp(language, size=size)
 
     def get_sent_split(self, language: str) -> Language:
-        vocab = self._load_nlp(language, size="sm").vocab
+        vocab = self._load_nlp(language, size=SpacySize.SMALL).vocab
         sent_split = spacy.blank(language, vocab=vocab)
         sent_split.add_pipe("sentencizer")
         return sent_split
