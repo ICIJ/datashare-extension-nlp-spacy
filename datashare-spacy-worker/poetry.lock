@@ -168,6 +168,23 @@ files = [
 frozenlist = ">=1.1.0"
 
 [[package]]
+name = "aiostream"
+version = "0.6.2"
+description = "Generator-based operators for asynchronous iteration"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "aiostream-0.6.2-py3-none-any.whl", hash = "sha256:e771bfb0a8d6f5e04359992025315fa4cc3b908ddb02822f73bb57d6ed7e9125"},
+    {file = "aiostream-0.6.2.tar.gz", hash = "sha256:481e58c7f94b98f37a81384411ee39336dffb933784753b1cfa0a26f3681cc2c"},
+]
+
+[package.dependencies]
+typing-extensions = "*"
+
+[package.extras]
+dev = ["pytest", "pytest-asyncio", "pytest-cov"]
+
+[[package]]
 name = "astroid"
 version = "3.2.4"
 description = "An abstract syntax tree for Python with inference support."
@@ -3498,4 +3515,4 @@ transformers = ["spacy-curated-transformers"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "5e476dde3f84f117c06a73c3872356f7e7c0680c4844ca8d847daffbb16247c1"
+content-hash = "c881fcf9f58306e6117b9b35575e30114a4d842bfbe773690d87838afd6ab38e"

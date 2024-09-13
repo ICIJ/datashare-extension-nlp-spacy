@@ -3,14 +3,16 @@ from typing import Dict, List, Optional
 from icij_worker import AsyncApp
 from icij_worker.typing_ import RateProgress
 
+from spacy_worker.constants import DS_SPACY_NER_TASK, SPACY_NER_TASK
 from spacy_worker.objects import SpacySize
 from spacy_worker.tasks import spacy_ner as spacy_ner_, ds_spacy_ner as ds_spacy_ner_
 from spacy_worker.tasks.dependencies import APP_LIFESPAN_DEPS
 
+
 app = AsyncApp("spacy", dependencies=APP_LIFESPAN_DEPS)
 
 
-@app.task(name="spacy-ner")
+@app.task(name=SPACY_NER_TASK)
 async def spacy_ner(
     texts: List[str],
     language: str,
@@ -24,7 +26,7 @@ async def spacy_ner(
     )
 
 
-@app.task(name="ds-spacy-ner")
+@app.task(name=DS_SPACY_NER_TASK)
 async def ds_spacy_ner(
     docs: List[Dict],
     *,

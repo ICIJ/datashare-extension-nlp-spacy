@@ -12,6 +12,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Sequence,
     Set,
     Tuple,
 )
@@ -26,7 +27,7 @@ from spacy.util import is_package
 
 from spacy_worker.constants import DATA_DIR
 from spacy_worker.ner_label_scheme import NERLabelScheme
-from spacy_worker.objects import Category, NamedEntity, SpacySize
+from spacy_worker.objects import Category, NamedEntity, NamedEntity_, SpacySize
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +54,6 @@ async def spacy_ner(
 ) -> Generator[List[NamedEntity], None, None]:
     if progress is not None:
         progress = to_raw_progress(progress, max_progress=len(texts))
-    if not any(c == "transformer" for c in ner.pipe_names):
-        batch_size = None
     label_scheme = NERLabelScheme(tuple(ner.pipe_labels.get("ner")))
     # TODO: for better NER performance, it could be nicer have chunks for several
     #  sentence rather than just sentence by sentence
@@ -88,6 +87,31 @@ async def spacy_ner(
         n_processed_texts += 1
         if progress is not None:
             await progress(n_processed_texts)
+
+
+async def ds_spacy_ner(
+    texts: Sequence[str],
+    ner: Language,
+    *,
+    categories: Set[Category],
+    sent_split: Language,
+    n_process: int = -1,
+    batch_size: Optional[int],
+    progress: Optional[RateProgress] = None,
+) -> Generator[List[NamedEntity_], None, None]:
+    n_texts = 0
+    async for ents in spacy_ner(
+        texts,
+        ner,
+        n_process=n_process,
+        categories=categories,
+        sent_split=sent_split,
+        batch_size=batch_size,
+        progress=progress,
+    ):
+        ents = [NamedEntity_.from_spacy(ent, texts[n_texts]) for ent in ents]
+        yield ents
+        n_texts += 1
 
 
 class SpacyProvider:
