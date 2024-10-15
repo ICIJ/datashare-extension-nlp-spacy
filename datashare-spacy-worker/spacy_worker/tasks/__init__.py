@@ -1,4 +1,5 @@
 import functools
+import logging
 import multiprocessing
 from typing import Awaitable, Callable, Dict, List, Optional, Set
 
@@ -25,6 +26,8 @@ from spacy_worker.tasks.dependencies import (
 )
 from spacy_worker.utils import iter_async
 
+logger = logging.getLogger(__name__)
+
 _DEFAULT_CATEGORIES = [Category.LOC, Category.PER, Category.ORG]
 
 
@@ -44,10 +47,12 @@ async def spacy_ner(
     spacy_provider = lifespan_spacy_provider()
     size = SpacySize(size)
     ner = spacy_provider.get_ner(language, size=size)
-    sent_split = spacy_provider.get_sent_split(language)
+    sent_split = spacy_provider.get_sent_split(language, size=size)
     n_process = get_n_process(ner, max_processes=config.max_processes)
     keys = ["doc_id", "offset", "text"]
-    doc_ids, offsets, texts = zip(*((d[k] for k in keys) for d in docs))
+    doc_ids, offsets, texts = zip(*(tuple(d[k] for k in keys) for d in docs))
+    doc_ids = list(doc_ids)
+    offsets = list(offsets)
     texts = list(texts)
     tags = spacy_ner_(
         texts,
@@ -59,18 +64,18 @@ async def spacy_ner(
         batch_size=config.batch_size,
     )
     res = []
-    async for doc_id, offset, text, tags in aiozip(
-        iter_async(doc_ids), iter_async(offsets), iter_async(texts), tags
-    ):
-        tags = [
-            NamedEntity_(
-                start=t.start + offset,
-                mention=text[t.start : t.end],
-                category=t.category,
-            ).dict()
-            for t in tags
-        ]
-        res.append({"doc_id": doc_id, "tags": tags})
+    zs = aiozip(iter_async(doc_ids), iter_async(offsets), iter_async(texts), tags)
+    async with zs.stream() as streamer:
+        async for doc_id, offset, text, text_tags in streamer:
+            text_tags = [
+                NamedEntity_(
+                    start=t.start + offset,
+                    mention=text[t.start : t.end],
+                    category=t.category,
+                ).dict()
+                for t in text_tags
+            ]
+            res.append({"doc_id": doc_id, "tags": text_tags})
     return res
 
 
@@ -186,4 +191,4 @@ def get_n_process(ner: Language, max_processes: int) -> int:
         return 1
     if max_processes == -1:
         max_processes = multiprocessing.cpu_count()
-    return max_processes - 1  # For the sentence splitter
+    return max_processes

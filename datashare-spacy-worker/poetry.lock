@@ -882,25 +882,27 @@ neo4j = ["neo4j (>=5.0.0,<6.0.0)"]
 
 [[package]]
 name = "icij-worker"
-version = "0.9.9"
+version = "0.11.5"
 description = "Create asynchronous tasks from Python functions"
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "icij_worker-0.9.9-py3-none-any.whl", hash = "sha256:bf1f06add7c709e11b061f7e644bd0a746ec3f112616775bbc0953875049114e"},
-    {file = "icij_worker-0.9.9.tar.gz", hash = "sha256:847b5a7004794bcd12befbb0c09d09c7db176fbb195199cf1dcc8b2ad4184d53"},
+    {file = "icij_worker-0.11.5-py3-none-any.whl", hash = "sha256:be1374962fc213b4815459e2f8843165abaa2d583a9bf67fa72bfce9d3ccb8d1"},
+    {file = "icij_worker-0.11.5.tar.gz", hash = "sha256:850c473299ffc98e019a7974bc0746fdb8ebfb3380ea6db167a03011253b2557"},
 ]
 
 [package.dependencies]
 aio-pika = {version = ">=9.4.0,<10.0.0", optional = true, markers = "extra == \"amqp\""}
+aiohttp = {version = ">=3.9.3,<4.0.0", optional = true, markers = "extra == \"amqp\""}
 icij_common = ">=0.5.1,<0.6.0"
-psycopg = {version = ">=3.2.1,<4.0.0", extras = ["binary"], optional = true, markers = "extra == \"amqp\""}
+psycopg = {version = ">=3.2.1,<4.0.0", extras = ["binary", "pool"], optional = true, markers = "extra == \"amqp\""}
 sqlitedict = {version = ">=2.1.0,<3.0.0", optional = true, markers = "extra == \"amqp\""}
 typer = {version = ">=0.12.3,<0.13.0", extras = ["all"]}
+typing-extensions = ">=4.12.2,<5.0.0"
 ujson = {version = ">=5.10.0,<6.0.0", optional = true, markers = "extra == \"amqp\""}
 
 [package.extras]
-amqp = ["aio-pika (>=9.4.0,<10.0.0)", "psycopg[binary] (>=3.2.1,<4.0.0)", "sqlitedict (>=2.1.0,<3.0.0)", "ujson (>=5.10.0,<6.0.0)"]
+amqp = ["aio-pika (>=9.4.0,<10.0.0)", "aiohttp (>=3.9.3,<4.0.0)", "psycopg[binary,pool] (>=3.2.1,<4.0.0)", "sqlitedict (>=2.1.0,<3.0.0)", "ujson (>=5.10.0,<6.0.0)"]
 neo4j = ["neo4j (>=5.0.0,<6.0.0)"]
 
 [[package]]
@@ -1709,6 +1711,7 @@ files = [
 
 [package.dependencies]
 psycopg-binary = {version = "3.2.1", optional = true, markers = "implementation_name != \"pypy\" and extra == \"binary\""}
+psycopg-pool = {version = "*", optional = true, markers = "extra == \"pool\""}
 typing-extensions = ">=4.4"
 tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
@@ -1780,6 +1783,31 @@ files = [
     {file = "psycopg_binary-3.2.1-cp39-cp39-musllinux_1_2_ppc64le.whl", hash = "sha256:788ffc43d7517c13e624c83e0e553b7b8823c9655e18296566d36a829bfb373f"},
     {file = "psycopg_binary-3.2.1-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:21927f41c4d722ae8eb30d62a6ce732c398eac230509af5ba1749a337f8a63e2"},
     {file = "psycopg_binary-3.2.1-cp39-cp39-win_amd64.whl", hash = "sha256:921f0c7f39590763d64a619de84d1b142587acc70fd11cbb5ba8fa39786f3073"},
+]
+
+[[package]]
+name = "psycopg-pool"
+version = "3.2.3"
+description = "Connection Pool for Psycopg"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "psycopg_pool-3.2.3-py3-none-any.whl", hash = "sha256:53bd8e640625e01b2927b2ad96df8ed8e8f91caea4597d45e7673fc7bbb85eb1"},
+    {file = "psycopg_pool-3.2.3.tar.gz", hash = "sha256:bb942f123bef4b7fbe4d55421bd3fb01829903c95c0f33fd42b7e94e5ac9b52a"},
+]
+
+[package.dependencies]
+typing-extensions = ">=4.6"
+
+[[package]]
+name = "pycountry"
+version = "24.6.1"
+description = "ISO country, subdivision, language, currency and script definitions and their translations"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pycountry-24.6.1-py3-none-any.whl", hash = "sha256:f1a4fb391cd7214f8eefd39556d740adcc233c778a27f8942c8dca351d6ce06f"},
+    {file = "pycountry-24.6.1.tar.gz", hash = "sha256:b61b3faccea67f87d10c1f2b0fc0be714409e8fcdcc1315613174f6466c10221"},
 ]
 
 [[package]]
@@ -3515,4 +3543,4 @@ transformers = ["spacy-curated-transformers"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "c881fcf9f58306e6117b9b35575e30114a4d842bfbe773690d87838afd6ab38e"
+content-hash = "e3870d196b328b27f87b6902208461d400978c5afc996114ee67072dbc9e5814"

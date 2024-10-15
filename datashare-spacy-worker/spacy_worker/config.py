@@ -23,9 +23,9 @@ class AppConfig(ICIJSettings, LogWithWorkerIDMixin, NoEnumModel):
     # DS
     ds_api_key: Optional[str] = None
     # ES
-    es_address: str
+    es_address: str = "http://localhost:9200"
     es_default_page_size: int = 1000
-    es_keep_alive: str = "1m"
+    es_keep_alive: str = "10m"
     es_max_concurrency: int = 5
     es_max_retries: int = 0
     es_max_retry_wait_s: Union[int, float] = 60

@@ -16,9 +16,9 @@ _SPACY_PROVIDER: Optional[Pool] = None
 _ES_CLIENT: Optional[ESClient] = None
 
 
-def load_app_config(worker_config: WorkerConfig, **_):
+def load_app_config(worker_config: Optional[WorkerConfig] = None, **_):
     global _ASYNC_APP_CONFIG
-    if worker_config.app_bootstrap_config_path is not None:
+    if worker_config and worker_config.app_bootstrap_config_path is not None:
         _ASYNC_APP_CONFIG = AppConfig.parse_file(
             worker_config.app_bootstrap_config_path
         )

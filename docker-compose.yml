@@ -1,0 +1,53 @@
+version: '3.7'
+
+x-worker-config-variables: &worker-config
+  ICIJ_WORKER_TYPE: amqp
+  ICIJ_WORKER_RABBITMQ_HOST: rabbitmq
+  ICIJ_WORKER_RABBITMQ_PORT: 5672
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.12.0-management
+    container_name: spacy-nlp-rabbit-mq
+    healthcheck:
+      test: rabbitmq-diagnostics -q status
+      interval: 5s
+      timeout: 2s
+      retries: 10
+      start_period: 5s
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  postgres:
+    image: postgres
+    container_name: spacy-nlp-postgres
+    environment:
+      POSTGRES_PASSWORD: changeme
+    healthcheck:
+      test: pg_isready
+      interval: 2s
+      timeout: 2s
+      retries: 10
+      start_period: 5s
+    ports:
+      - "5435:5432"
+    command: ["postgres", "-c", "log_statement=all"]
+
+  spacy-worker:
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    build:
+      context: .
+      target: worker
+    environment:
+      <<: *worker-config
+      DS_DOCKER_SPACY_MAX_PROCESSES: 1
+      DS_DOCKER_SPACY_MAX_LANGUAGES_IN_MEMORY: 1
+      DS_DOCKER_SPACY_LOG_LEVEL: DEBUG
+    deploy:
+      mode: replicated
+      replicas: 8

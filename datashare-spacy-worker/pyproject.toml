@@ -13,7 +13,7 @@ where = ["spacy_worker/data/*.json"]
 [tool.poetry.dependencies]
 python = "^3.10"
 
-icij-worker = { extras = ["amqp"], version = "^0.9.9" }
+icij-worker = { extras = ["amqp"], version = "^0.11.5" }
 # TODO: it seems that wheels are not built for spacy >= 3.7.6 for ARM
 # TODO: optionnally add CUDA support for when a GPU is available
 spacy = [
@@ -27,6 +27,7 @@ spacy-curated-transformers = { version = "^0.2.2", optional = true }
 
 tenacity = "^9.0.0"
 aiostream = "^0.6.2"
+pycountry = "^24.6.1"
 [tool.poetry.extras]
 transformers = [
     "spacy-curated-transformers"

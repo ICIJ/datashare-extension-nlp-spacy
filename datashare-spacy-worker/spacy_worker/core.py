@@ -60,6 +60,7 @@ async def spacy_ner(
     split_texts = _split_docs_spacy(texts, sent_split)
     previous_ctx = None
     sub_docs = []
+    logger.debug("creating spacy pipe with %s process(es)", n_process)
     pipe = ner.pipe(
         split_texts, n_process=n_process, as_tuples=True, batch_size=batch_size
     )
@@ -74,7 +75,8 @@ async def spacy_ner(
             )
             yield predicted
             n_processed_texts += 1
-            if progress is not None:
+            update_progress = not (ctx["doc_ix"] % 50)
+            if progress is not None and update_progress:
                 await progress(n_processed_texts)
             sub_docs = [doc]
         else:
@@ -99,8 +101,8 @@ async def ds_spacy_ner(
     batch_size: Optional[int],
     progress: Optional[RateProgress] = None,
 ) -> Generator[List[NamedEntity_], None, None]:
-    n_texts = 0
-    async for ents in spacy_ner(
+    i = 0
+    async for text_ents in spacy_ner(
         texts,
         ner,
         n_process=n_process,
@@ -109,9 +111,10 @@ async def ds_spacy_ner(
         batch_size=batch_size,
         progress=progress,
     ):
-        ents = [NamedEntity_.from_spacy(ent, texts[n_texts]) for ent in ents]
-        yield ents
-        n_texts += 1
+        text = texts[i]
+        text_ents = [NamedEntity_.from_spacy(ent, text) for ent in text_ents]
+        yield text_ents
+        i += 1
 
 
 class SpacyProvider:
@@ -132,8 +135,8 @@ class SpacyProvider:
     def get_ner(self, language: str, *, size: SpacySize) -> Language:
         return self._load_nlp(language, size=size)
 
-    def get_sent_split(self, language: str) -> Language:
-        vocab = self._load_nlp(language, size="sm").vocab
+    def get_sent_split(self, language: str, *, size: SpacySize) -> Language:
+        vocab = self._load_nlp(language, size=size).vocab
         sent_split = spacy.blank(language, vocab=vocab)
         sent_split.add_pipe("sentencizer")
         return sent_split

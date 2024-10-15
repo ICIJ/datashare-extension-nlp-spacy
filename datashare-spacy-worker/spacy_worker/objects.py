@@ -9,7 +9,7 @@ from typing import Dict, Iterable, List
 from icij_common.pydantic_utils import LowerCamelCaseModel
 from pydantic import Field
 
-from spacy_worker.es import DOC_ROOT_ID, ID_, SOURCE
+from spacy_worker.es import DOC_LANGUAGE, DOC_ROOT_ID, ID_, SOURCE
 
 
 @unique
@@ -48,7 +48,9 @@ class DSNamedEntity(LowerCamelCaseModel):
     document_id: str
     root_document: str
     extractor: str = Field(default="SPACY", const=True)
+    type: str = Field(default="NamedEntity", const=True)
     extractor_language: str
+    offsets: List[int]
 
     @classmethod
     def from_tags(
@@ -76,6 +78,7 @@ class DSNamedEntity(LowerCamelCaseModel):
                     document_id=doc.id,
                     root_document=doc.root_id,
                     extractor_language=language,
+                    offsets=offsets,
                 )
             )
         return ents
@@ -86,7 +89,7 @@ _CONSECUTIVE_SPACES_RE = re.compile(r"\s+")
 
 def _normalize(s: str) -> str:
     s = s.strip()
-    return _CONSECUTIVE_SPACES_RE.sub(s, " ").lower()
+    return _CONSECUTIVE_SPACES_RE.sub(" ", s).lower()
 
 
 @unique
@@ -101,7 +104,14 @@ class DSDoc(LowerCamelCaseModel):
     id: str
     project: str
     root_id: str
+    language: str
 
     @classmethod
     def from_es(cls, es_doc: Dict, project: str) -> DSDoc:
-        return cls(project=project, id=es_doc[ID_], root_id=es_doc[SOURCE][DOC_ROOT_ID])
+        sources = es_doc[SOURCE]
+        return cls(
+            project=project,
+            id=es_doc[ID_],
+            root_id=sources[DOC_ROOT_ID],
+            language=sources[DOC_LANGUAGE],
+        )
