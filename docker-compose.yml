@@ -47,7 +47,9 @@ services:
       <<: *worker-config
       DS_DOCKER_SPACY_MAX_PROCESSES: 1
       DS_DOCKER_SPACY_MAX_LANGUAGES_IN_MEMORY: 1
+      DS_DOCKER_SPACY_ES_ADDRESS: http://host.docker.internal:9200
+      DS_DOCKER_SPACY_BATCH_SIZE: 1024
       DS_DOCKER_SPACY_LOG_LEVEL: DEBUG
     deploy:
       mode: replicated
-      replicas: 8
+      replicas: 10

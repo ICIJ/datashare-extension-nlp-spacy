@@ -39,7 +39,7 @@ async def ds_spacy_ner(
     categories: List[str] = None,
     progress: Optional[RateProgress] = None,
 ) -> List[List[Dict]]:
-    msg = f"worker processed {len(docs)} docs in {{elapsed}} !"
+    msg = f"worker processed {len(docs)} docs in {{elapsed_time}} !"
     with log_elapsed_time_cm(logger, level=logging.INFO, output_msg=msg):
         return await ds_spacy_ner_(
             docs, size=size, categories=categories, progress=progress

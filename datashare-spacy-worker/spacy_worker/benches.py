@@ -20,7 +20,7 @@ import spacy
 from aiohttp import BasicAuth
 from aiostream.stream import chain
 from elasticsearch._async.helpers import async_bulk
-from icij_common.logging_utils import log_elapsed_time, log_elapsed_time_cm
+from icij_common.logging_utils import log_elapsed_time_cm
 from icij_common.pydantic_utils import jsonable_encoder
 from icij_worker import (
     AMQPTaskManager,
@@ -89,6 +89,7 @@ async def extract_nlp_task(
         can_consume = asyncio.Event()
         can_produce = asyncio.Event()
         can_produce.set()
+        # TODO: to replicate DS, we should poll tasks 1 by 1
         produce_tasks = produce_ner_tasks(
             project,
             task_manager,
@@ -135,6 +136,7 @@ async def produce_ner_tasks(
     size: SpacySize,
 ):
     # Here
+    # TODO: to replicate DS, we should poll tasks 1 by 1
     docs = doc_stream(es_client, project)
     async for language, language_docs in _language_docs_it(docs):
         await nlp_pipeline(
@@ -193,6 +195,13 @@ async def consume_ner_results(
                 logger.info("saved %s docs", n_docs)
                 logger.info("%s tokens/s, %s doc/s", tok_speed, doc_speed)
                 ne_buffer.clear()
+                if n_docs >= 100000:
+                    elapsed = time.process_time() - start
+                    tok_speed = int(n_tokens / elapsed)
+                    doc_speed = int(n_docs / elapsed)
+                    logger.info("process %s docs", n_docs)
+                    logger.info("final %s tokens/s, %s doc/s", tok_speed, doc_speed)
+                    return
             res_buffer.pop(res["doc"].id)
     if ne_buffer:
         await _add_doc_ne(es_client, ne_buffer, project)
@@ -291,86 +300,171 @@ async def extract_nlp_task_ds(
     task_manager: TaskManager,
     es_client: ESClient,
     *,
-    doc_batch_size: int,
+    batch_size: int,
     nlp_parallelism: int,
     size: SpacySize,
 ):
     # We poll documents from the next task, while workers are busy
     max_tasks = nlp_parallelism * 2
-    with log_elapsed_time(logger, level=logging.INFO, output_msg=_ELAPSED_MSG):
-        # Here
-        docs = doc_stream(es_client, project)
-        async for language, language_docs in _language_docs_it(docs):
-            async for res in nlp_pipeline_ds(
-                language_docs,
-                language,
-                task_manager,
-                project=project,
-                max_tasks=max_tasks,
-                doc_batch_size=doc_batch_size,
-                size=size,
-            ):
-                doc = DSDoc.from_es(res["doc"], project=project)
-                tags = parse_obj_as(List[NamedEntity_], res["tags"])
-                named_entities = DSNamedEntity.from_tags(tags, doc, language=language)
-                # TODO: we could deal with that in a bulk async fashion...
-                #  we could also batch to avoid too many ES round-trips
-                await _add_doc_ne(es_client, named_entities, project)
+    with log_elapsed_time_cm(logger, level=logging.INFO, output_msg=_ELAPSED_MSG):
+        start = time.process_time()
+        task_buffer = []
+        can_consume = asyncio.Event()
+        can_produce = asyncio.Event()
+        can_produce.set()
+        produce_tasks = produce_ner_tasks_ds(
+            project,
+            task_manager,
+            es_client,
+            task_buffer,
+            can_consume=can_consume,
+            can_produce=can_produce,
+            batch_size=batch_size,
+            max_tasks=max_tasks,
+            size=size,
+        )
+        produce_tasks = asyncio.create_task(produce_tasks)
+        await can_consume.wait()
+        consume_results = consume_ner_results_ds(
+            project,
+            produce_tasks,
+            task_manager,
+            es_client,
+            task_buffer,
+            max_tasks,
+            can_produce=can_produce,
+            start=start,
+        )
+        consume_results = asyncio.create_task(consume_results)
+        await produce_tasks
+        await consume_results
+
+
+async def produce_ner_tasks_ds(
+    project: str,
+    task_manager: TaskManager,
+    es_client: ESClient,
+    task_buffer: List[str],
+    *,
+    can_produce: asyncio.Event,
+    can_consume: asyncio.Event,
+    batch_size: int,
+    max_tasks: int,
+    size: SpacySize,
+):
+    # Here
+    docs = doc_stream(es_client, project, sources=[DOC_LANGUAGE, DOC_ROOT_ID])
+    async for language, language_docs in _language_docs_it(docs):
+        await nlp_pipeline_ds(
+            language_docs,
+            task_manager,
+            task_buffer,
+            can_produce=can_produce,
+            can_consume=can_consume,
+            project=project,
+            batch_size=batch_size,
+            max_tasks=max_tasks,
+            size=size,
+        )
+
+
+async def consume_ner_results_ds(
+    project: str,
+    produce_task: asyncio.Task,
+    task_manager: TaskManager,
+    es_client: ESClient,
+    task_buffer: List[str],
+    max_tasks: int,
+    can_produce: asyncio.Event,
+    start: float,
+):
+    ne_buffer = []
+    n_docs = 0
+    n_tokens = 0
+    while not produce_task.done():
+        ready_task = await _poll_tasks(task_buffer, task_manager, interval_s=0.2)
+        if len(task_buffer) <= max_tasks:
+            can_produce.set()
+        else:
+            can_produce.clear()
+        res = await task_manager.get_task_result(ready_task)
+        res = cast(Dict, res.result)
+        for doc_res in res:
+            n_docs += 1
+            n_tokens += doc_res["n_tokens"]
+            doc = DSDoc(**doc_res["doc"])
+            tags = parse_obj_as(List[NamedEntity_], doc_res["tags"])
+            named_entities = DSNamedEntity.from_tags(tags, doc, language=doc.language)
+            ne_buffer.extend(named_entities)
+            # TODO: update to 1000
+            if len(ne_buffer) >= 1000:
+                elapsed = time.process_time() - start
+                tok_speed = int(n_tokens / elapsed)
+                doc_speed = int(n_docs / elapsed)
+                await _add_doc_ne(es_client, ne_buffer, project)
+                logger.info("saved %s docs", n_docs)
+                logger.info("%s tokens/s, %s doc/s", tok_speed, doc_speed)
+                ne_buffer.clear()
+                if n_docs >= 100000:
+                    elapsed = time.process_time() - start
+                    tok_speed = int(n_tokens / elapsed)
+                    doc_speed = int(n_docs / elapsed)
+                    logger.info("process %s docs", n_docs)
+                    logger.info("final %s tokens/s, %s doc/s", tok_speed, doc_speed)
+                    return
+    if ne_buffer:
+        await _add_doc_ne(es_client, ne_buffer, project)
 
 
 # This one lives in the extension
 async def nlp_pipeline_ds(
     docs: AsyncIterable[Dict],
-    language: str,
     task_manager: TaskManager,
+    task_buffer: List[str],
+    can_produce: asyncio.Event,
+    can_consume: asyncio.Event,
     *,
     project: str,
     max_tasks: int,
-    doc_batch_size: int,
+    batch_size: int,
     size: SpacySize,
-) -> AsyncGenerator[Dict, None]:
+):
     # TODO: polling could even be done in an async fashion
     current_tasks = []
     task_docs = []
     async for doc in docs:
-        if len(task_docs) >= doc_batch_size:
-            while len(current_tasks) >= max_tasks:
-                # Wait for some task to be ready
-                ready_task = await _poll_tasks(current_tasks, task_manager)
-                docs_ne = await task_manager.get_task_result(ready_task)
-                docs_ne = cast(List[Dict], docs_ne.result)
-                for res in docs_ne:
-                    yield res
-                # Pop the task
-                current_tasks = [t for t in current_tasks if t != ready_task]
-            t = await _enqueue_ds_task(task_manager, task_docs, language, size)
+        if len(task_docs) >= batch_size:
+            await can_produce.wait()
+            t = await _enqueue_ds_task(task_manager, task_docs, size)
+            task_buffer.append(t)
+            if not can_consume.is_set():
+                can_consume.set()
             current_tasks.append(t)
+            if len(task_buffer) >= max_tasks:
+                can_produce.clear()
+            elif not can_consume.is_set():
+                can_produce.set()
             task_docs.clear()
         task_docs.append(DSDoc.from_es(doc, project=project))
     if task_docs:
-        t = await _enqueue_ds_task(task_manager, task_docs, language, size)
+        await can_produce.wait()
+        t = await _enqueue_ds_task(task_manager, task_docs, size)
         current_tasks.append(t)
-        task_docs.clear()
-    # Wait for all task to be done
-    while current_tasks:
-        ready_task = await _poll_tasks(current_tasks, task_manager)
-        docs_ne = await task_manager.get_task_result(ready_task)
-        docs_ne = cast(List[Dict], docs_ne.result)
-        for res in docs_ne:
-            yield res
-        current_tasks = [t for t in current_tasks if t != ready_task]
+        del task_docs
 
 
-async def doc_stream(es_client: ESClient, project: str) -> AsyncGenerator[Dict, None]:
+async def doc_stream(
+    es_client: ESClient, project: str, sources=None
+) -> AsyncGenerator[Dict, None]:
     query = make_document_query(dict())
+    if sources is None:
+        sources = [DOC_ROOT_ID, DOC_CONTENT, DOC_LANGUAGE, SORT]
     async with es_client.pit(index=project) as pit:
         if pit is not None:
             pit[KEEP_ALIVE] = es_client.keep_alive
         query = with_pit(query, pit)
         async for doc in es_client.poll_search_pages(
-            query,
-            sort=_SORT,
-            _source_includes=[DOC_ROOT_ID, DOC_CONTENT, DOC_LANGUAGE, SORT],
+            query, sort=_SORT, _source_includes=sources
         ):
             for d in doc[HITS][HITS]:
                 language = pycountry.languages.get(name=d[SOURCE][DOC_LANGUAGE]).alpha_2
@@ -379,13 +473,11 @@ async def doc_stream(es_client: ESClient, project: str) -> AsyncGenerator[Dict, 
 
 
 async def _enqueue_ds_task(
-    task_manager: TaskManager, task_docs: List[DSDoc], language: str, size: SpacySize
+    task_manager: TaskManager, task_docs: List[DSDoc], size: SpacySize
 ) -> str:
     task_name = DS_SPACY_NER_TASK
     task_id = f"{task_name}-{uuid4().hex}"
-    task_docs = jsonable_encoder(task_docs)
-    language = pycountry.languages.get(name=language).alpha_2
-    args = {"docs": task_docs, "language": language, "size": size}
+    args = {"docs": task_docs, "size": size}
     task = Task.create(task_id=task_id, task_name=task_name, args=args)
     await task_manager.save_task(task)
     await task_manager.enqueue(task)
@@ -496,6 +588,35 @@ async def main(
                 )
 
 
+async def main_ds(*, batch_size: int, nlp_parallelism: int, size: SpacySize):
+    deps = [
+        ("loading async app configuration", load_app_config, None),
+        ("es client", es_client_enter, es_client_exit),
+    ]
+    task_storage = PostgresStorageConfig(port=5435).to_storage(None)
+    async with run_deps(deps, ""):
+        async with task_storage:
+            management_client = AMQPManagementClient(
+                "http://localhost:15672",
+                rabbitmq_vhost="%2F",
+                rabbitmq_auth=BasicAuth("guest", "guest"),
+            )
+            broker_url = "http://localhost:5672"
+            tm = AMQPTaskManager(
+                app, task_storage, management_client, broker_url=broker_url
+            )
+            es_client = lifespan_es_client()
+            async with tm:
+                await extract_nlp_task_ds(
+                    "local-datashare",
+                    task_manager=tm,
+                    es_client=es_client,
+                    batch_size=batch_size,
+                    nlp_parallelism=nlp_parallelism,
+                    size=size,
+                )
+
+
 if __name__ == "__main__":
     import spacy_worker
     import icij_worker
@@ -505,10 +626,18 @@ if __name__ == "__main__":
     setup_loggers(names, level=logging.DEBUG)
     setup_loggers([icij_worker.__name__], level=logging.INFO)
     nlp_parallelism = 10
-    # batch_size = 4 * 1024
     batch_size = 1 * 1024
+    # doc_batch_size = 1000
     max_content_length = 1024
     spacy_size = SpacySize.MEDIUM
+    # asyncio.run(
+    #     main(
+    #         batch_size=batch_size,
+    #         max_content_length=max_content_length,
+    #         nlp_parallelism=nlp_parallelism,
+    #         size=spacy_size,
+    #     )
+    # )
     asyncio.run(
         main(
             batch_size=batch_size,

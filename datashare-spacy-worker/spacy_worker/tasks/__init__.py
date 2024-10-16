@@ -1,8 +1,11 @@
 import functools
 import logging
 import multiprocessing
-from typing import Awaitable, Callable, Dict, List, Optional, Set
+from collections.abc import AsyncGenerator
+from typing import Callable, Dict, List, Optional, Set
 
+import pycountry
+from aiostream.stream import zip as aiozip
 from icij_common.pydantic_utils import jsonable_encoder
 from icij_worker.typing_ import RateProgress
 from icij_worker.utils.progress import to_raw_progress
@@ -10,14 +13,8 @@ from numpy.random.mtrand import Sequence
 from pydantic.tools import parse_obj_as
 from spacy import Language
 
-from aiostream.stream import zip as aiozip
-
-from spacy_worker.core import (
-    SpacyProvider,
-    ds_spacy_ner as ds_spacy_ner_,
-    spacy_ner as spacy_ner_,
-)
-from spacy_worker.es import DOC_CONTENT, DOC_LANGUAGE
+from spacy_worker.core import ds_spacy_ner as ds_spacy_ner_, spacy_ner as spacy_ner_
+from spacy_worker.es import DOC_CONTENT, DOC_CONTENT_LENGTH, DOC_LANGUAGE
 from spacy_worker.objects import Category, DSDoc, NamedEntity_, SpacySize
 from spacy_worker.tasks.dependencies import (
     lifespan_config,
@@ -112,26 +109,31 @@ async def ds_spacy_ner(
     batch = []
     # Careful, this could get real large...
     tags = [[] for _ in range(n_docs)]
+    doc_lengths = []
     batch_ix_to_doc_ix = dict()
-    process_fn = None
+    language = pycountry.languages.get(name=docs[0].language).alpha_2
+    ner = spacy_provider.get_ner(language, size=size)
+    sent_split = spacy_provider.get_sent_split(language, size=size)
+    n_process = get_n_process(ner, max_processes=config.max_processes)
+    process_fn = functools.partial(
+        ds_spacy_ner_,
+        ner=ner,
+        categories=categories,
+        sent_split=sent_split,
+        n_process=n_process,
+        progress=None,
+        batch_size=batch_size,
+    )
     for doc_i, doc in enumerate(docs):
         es_doc = await es_client.get_source(
             index=doc.project,
             id=doc.id,
             routing=doc.root_id,
-            _source_includes=[DOC_LANGUAGE, DOC_CONTENT],
+            _source_includes=[DOC_LANGUAGE, DOC_CONTENT, DOC_CONTENT_LENGTH],
         )
-        if process_fn is None:
-            process_fn = _get_process_fn(
-                spacy_provider,
-                size,
-                categories,
-                es_doc[DOC_LANGUAGE],
-                max_process=config.max_processes,
-                batch_size=batch_size,
-            )
         doc_content = es_doc[DOC_CONTENT]
         doc_length = len(doc_content)
+        doc_lengths.append(doc_length)
         for text_i in range(0, doc_length, max_content_length):
             if len(batch) >= batch_size:
                 await _consume_batch(process_fn, batch, batch_ix_to_doc_ix, tags)
@@ -145,44 +147,24 @@ async def ds_spacy_ner(
         if progress is not None:
             await progress(n_docs)
     # TODO: use an object here
-    res = [{"doc": doc, "tags": doc_tags} for doc, doc_tags in zip(docs, tags)]
+    res = [
+        {"doc": doc, "tags": doc_tags, "n_tokens": doc_length}
+        for doc, doc_tags, doc_length in zip(docs, tags, doc_lengths)
+    ]
     return jsonable_encoder(res)
 
 
-def _get_process_fn(
-    spacy_provider: SpacyProvider,
-    size: SpacySize,
-    categories: Set[Category],
-    language: str,
-    *,
-    max_process: int,
-    batch_size: int,
-):
-    ner = spacy_provider.get_ner(language, size=size)
-    sent_split = spacy_provider.get_sent_split(language)
-    n_process = get_n_process(ner, max_processes=max_process)
-    process_fn = functools.partial(
-        ds_spacy_ner_,
-        ner=ner,
-        categories=categories,
-        sent_split=sent_split,
-        n_process=n_process,
-        progress=None,
-        batch_size=batch_size,
-    )
-    return process_fn
-
-
 async def _consume_batch(
-    _process_batch: Callable[[Sequence[str]], Awaitable[List[List[NamedEntity_]]]],
+    _process_batch: Callable[[Sequence[str]], AsyncGenerator[List[NamedEntity_]]],
     batch: List[str],
     batch_ix_to_doc_ix: Dict[int, int],
     tags: List[List[NamedEntity_]],
 ):
-    batch_tags = await _process_batch(batch)
-    for c_i, chunk_tags in enumerate(batch_tags):
+    c_i = 0
+    async for chunk_tags in _process_batch(batch):
         tags[batch_ix_to_doc_ix[c_i]].extend(chunk_tags)
-    batch_tags.clear()
+        c_i += 1
+    batch.clear()
     batch_ix_to_doc_ix.clear()
 
 
