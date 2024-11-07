@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:1
 FROM python:3.11-slim-bullseye AS worker-base
-ARG n_workers
 ENV HOME=/home/user
 ENV ICIJ_WORKER_TYPE=amqp
 
@@ -14,21 +13,22 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="$HOME/.cargo/bin:$PATH"
 
 WORKDIR $HOME/src/app
+ADD scripts  ./scripts/
 ADD datashare-spacy-worker/  ./datashare-spacy-worker/
 ADD data/models.json  ./datashare-spacy-worker/spacy_worker/data/
 WORKDIR $HOME/src/app/datashare-spacy-worker
 
 FROM worker-base AS worker
-
+ARG n_workers
+ENV N_PROCESSING_WORKERS $n_workers
 RUN --mount=type=cache,target=~/.cache/pypoetry poetry install
 RUN rm -rf ~/.cache/pip ~/.cache/pypoetry/cache ~/.cache/pypoetry/artifacts
-# TODO: add a namespace
-ENTRYPOINT poetry run python -m icij_worker workers start spacy_worker.app.app -n ${n_workers:-1}
+ENTRYPOINT ["/home/user/src/app/scripts/worker_entrypoint.sh"]
 
 
 FROM worker-base AS worker-transformers
-
+ARG n_workers
+ENV N_PROCESSING_WORKERS $n_workers
 RUN --mount=type=cache,target=~/.cache/pypoetry poetry install -E transformers
 RUN rm -rf ~/.cache/pip ~/.cache/pypoetry/cache ~/.cache/pypoetry/artifacts
-# TODO: add a namespace
-ENTRYPOINT poetry run python -m icij_worker workers start spacy_worker.app.app -n ${n_workers:-1}
+ENTRYPOINT ["/home/user/src/app/scripts/worker_entrypoint.sh"]
