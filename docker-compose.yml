@@ -6,7 +6,6 @@ services:
     container_name: ds-spacy-test-elasticsearch
     environment:
       - discovery.type=single-node
-      - http.port=9200
     ports:
       - "9200:9200"
     healthcheck:
