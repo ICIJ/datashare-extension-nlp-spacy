@@ -1,5 +1,4 @@
 import pytest
-import spacy
 from icij_common.es import ESClient, HITS, SOURCE, has_type
 from pydantic import parse_obj_as
 
@@ -10,21 +9,8 @@ from datashare_spacy_worker.objects import (
     NamedEntity,
     SpacySize,
 )
-from datashare_spacy_worker.tasks import get_n_process, spacy_ner_task
+from datashare_spacy_worker.tasks import spacy_ner_task
 from datashare_spacy_worker.tests.conftest import TEST_PROJECT
-
-
-@pytest.mark.parametrize(
-    "model,expected_n_process", [("en_core_web_sm", 666), ("en_core_web_trf", 1)]
-)
-def test_get_n_process(model: str, expected_n_process: int):
-    # Given
-    max_process = 666
-    language = spacy.load(model)
-    # When
-    n_process = get_n_process(language, max_process)
-    # Then
-    assert n_process == expected_n_process
 
 
 # TODO: this one would deserve a finer testing due to the multiple corner cases due to
