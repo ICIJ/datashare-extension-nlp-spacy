@@ -2,6 +2,7 @@ import logging
 from multiprocessing import Pool
 from typing import Optional
 
+from icij_common.es import ESClient
 from icij_worker import WorkerConfig
 from icij_worker.utils.dependencies import DependencyInjectionError
 
@@ -10,8 +11,9 @@ from spacy_worker.core import SpacyProvider
 
 logger = logging.getLogger(__name__)
 
-_ASYNC_APP_CONFIG: Optional[AppConfig] = None
+_ASYNC_APP_CONFIG: AppConfig | None = None
 _SPACY_PROVIDER: Optional[Pool] = None
+_ES_CLIENT: ESClient | None = None
 
 
 def load_app_config(worker_config: WorkerConfig, **_):
@@ -58,8 +60,31 @@ def lifespan_spacy_provider() -> SpacyProvider:
     return _SPACY_PROVIDER
 
 
+async def es_client_enter(**_):
+    # pylint: disable=unnecessary-dunder-call
+    config = lifespan_config()
+    global _ES_CLIENT
+    _ES_CLIENT = config.to_es_client()
+    await _ES_CLIENT.__aenter__()
+
+
+async def es_client_exit(exc_type, exc_val, exc_tb):
+    # pylint: disable=unnecessary-dunder-call
+    await lifespan_es_client().__aexit__(exc_type, exc_val, exc_tb)
+    global _ES_CLIENT
+    _ES_CLIENT = None
+
+
+def lifespan_es_client() -> ESClient:
+    # pylint: disable=unnecessary-dunder-call
+    if _ES_CLIENT is None:
+        raise DependencyInjectionError("es client")
+    return _ES_CLIENT
+
+
 APP_LIFESPAN_DEPS = [
     ("loading async app configuration", load_app_config, None),
     ("loggers", setup_loggers, None),
     ("spacy provider", spacy_provider_enter, spacy_provider_exit),
+    ("elasticsearch client", es_client_enter, es_client_exit),
 ]

@@ -1,6 +1,5 @@
 from enum import Enum, EnumType, unique
 from functools import lru_cache
-from typing import Optional, Tuple
 
 from spacy_worker.objects import Category
 
@@ -98,12 +97,12 @@ class NERLabelScheme(tuple, Enum, metaclass=SortedValuesEnumMeta):
     RUSSIAN = _RUSSIAN
     SWEDISH = _SWEDISH
 
-    def __new__(cls, value: Tuple[str, ...]):
+    def __new__(cls, value: tuple[str, ...]):
         obj = super().__new__(cls, tuple(sorted(value)))
         return obj
 
     @lru_cache
-    def to_spacy(self, spacy_label: str) -> Optional[Category]:
+    def to_spacy(self, spacy_label: str) -> Category | None:
         match self:
             case NERLabelScheme.CONLL:
                 return conll_label_to_ds(spacy_label)
@@ -129,7 +128,7 @@ class NERLabelScheme(tuple, Enum, metaclass=SortedValuesEnumMeta):
                 raise ValueError(f"Unexpected value {self}")
 
 
-def conll_label_to_ds(label: str) -> Optional[Category]:
+def conll_label_to_ds(label: str) -> Category | None:
     match label:
         case "LOC":
             return Category.LOC
@@ -143,7 +142,7 @@ def conll_label_to_ds(label: str) -> Optional[Category]:
             raise ValueError(f"Unexpected value {label}")
 
 
-def croatian_slovenian_label_to_ds(label: str) -> Optional[Category]:
+def croatian_slovenian_label_to_ds(label: str) -> Category | None:
     match label:
         case "LOC":
             return Category.LOC
@@ -157,7 +156,7 @@ def croatian_slovenian_label_to_ds(label: str) -> Optional[Category]:
             raise ValueError(f"Unexpected value {label}")
 
 
-def greek_label_to_ds(label: str) -> Optional[Category]:
+def greek_label_to_ds(label: str) -> Category | None:
     match label:
         case "LOC" | "GPE" | "EVENT":
             return Category.LOC
@@ -171,7 +170,7 @@ def greek_label_to_ds(label: str) -> Optional[Category]:
             raise ValueError(f"Unexpected value {label}")
 
 
-def japanese_label_to_ds(label: str) -> Optional[Category]:
+def japanese_label_to_ds(label: str) -> Category | None:
     match label:
         case "LOC" | "GPE" | "FAC" | "EVENT":
             return Category.LOC
@@ -199,7 +198,7 @@ def japanese_label_to_ds(label: str) -> Optional[Category]:
             raise ValueError(f"Unexpected value {label}")
 
 
-def lithuanian_label_to_ds(label: str) -> Optional[Category]:
+def lithuanian_label_to_ds(label: str) -> Category | None:
     match label:
         case "LOC" | "GPE":
             return Category.LOC
@@ -215,7 +214,7 @@ def lithuanian_label_to_ds(label: str) -> Optional[Category]:
             raise ValueError(f"Unexpected value {label}")
 
 
-def norwegian_label_to_ds(label: str) -> Optional[Category]:
+def norwegian_label_to_ds(label: str) -> Category | None:
     match label:
         case "LOC" | "GPE_LOC" | "EVT":
             return Category.LOC
@@ -227,7 +226,7 @@ def norwegian_label_to_ds(label: str) -> Optional[Category]:
             return None
 
 
-def onto_notes_5_label_to_ds(label: str) -> Optional[Category]:
+def onto_notes_5_label_to_ds(label: str) -> Category | None:
     match label:
         case "LOC" | "GPE" | "FAC" | "EVENT":
             return Category.LOC
@@ -247,7 +246,7 @@ def onto_notes_5_label_to_ds(label: str) -> Optional[Category]:
             raise ValueError(f"Unexpected value {label}")
 
 
-def polish_label_to_ds(label: str) -> Optional[Category]:
+def polish_label_to_ds(label: str) -> Category | None:
     match label:
         case "date" | "time":
             return Category.DATE
@@ -261,7 +260,7 @@ def polish_label_to_ds(label: str) -> Optional[Category]:
             raise ValueError(f"Unexpected value {label}")
 
 
-def romanian_label_to_ds(label: str) -> Optional[Category]:
+def romanian_label_to_ds(label: str) -> Category | None:
     match label:
         case "LOC" | "GPE" | "FACILITY" | "EVENT":
             return Category.LOC
@@ -281,7 +280,7 @@ def romanian_label_to_ds(label: str) -> Optional[Category]:
             raise ValueError(f"Unexpected value {label}")
 
 
-def russian_label_to_ds(label: str) -> Optional[Category]:
+def russian_label_to_ds(label: str) -> Category | None:
     match label:
         case "LOC":
             return Category.LOC
