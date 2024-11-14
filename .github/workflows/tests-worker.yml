@@ -34,6 +34,19 @@ jobs:
         run: |
           cp --remove-destination data/models.json datashare_spacy_worker/data
           poetry run python -m pytest -vvv --cache-clear --show-capture=all -r A .
+    services:
+      elasticsearch:
+        image: elasticsearch:7.17.25
+        env:
+          discovery.type: single-node
+        options: >-
+          --health-cmd "curl http://localhost:9200"
+          --health-interval 3s
+          --health-timeout 1s
+          --health-retries 10
+          --health-start-period 5s
+        ports:
+          - "9200:9200"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
