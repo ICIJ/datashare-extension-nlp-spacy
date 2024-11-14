@@ -6,8 +6,8 @@ from icij_common.es import ESClient
 from icij_worker import WorkerConfig
 from icij_worker.utils.dependencies import DependencyInjectionError
 
-from spacy_worker.config import AppConfig
-from spacy_worker.core import SpacyProvider
+from datashare_spacy_worker.config import AppConfig
+from datashare_spacy_worker.core import SpacyProvider
 
 logger = logging.getLogger(__name__)
 

@@ -13,9 +13,9 @@ from spacy.cli import download
 from spacy.tokens import Doc as SpacyDoc, Span
 from spacy.util import is_package
 
-from spacy_worker.constants import DATA_DIR
-from spacy_worker.ner_label_scheme import NERLabelScheme
-from spacy_worker.objects import Category, NlpTag, SpacySize
+from datashare_spacy_worker.constants import DATA_DIR
+from datashare_spacy_worker.ner_label_scheme import NERLabelScheme
+from datashare_spacy_worker.objects import Category, NlpTag, SpacySize
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ async def spacy_ner(
             predicted = _spacy_doc_to_ds_tags(merged, categories, label_scheme)
             yield predicted
             n_processed_texts += 1
-            update_progress = not (ctx["doc_ix"] % 50)
+            update_progress = not ctx["doc_ix"] % 50
             if progress is not None and update_progress:
                 await progress(n_processed_texts)
             sub_docs = [doc]

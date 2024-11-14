@@ -7,9 +7,9 @@ import spacy
 from icij_common.test_utils import fail_if_exception
 from packaging.version import Version
 
-from spacy_worker.constants import DATA_DIR
-from spacy_worker.core import SpacyProvider, spacy_ner
-from spacy_worker.objects import Category, NamedEntity, NlpTag, SpacySize
+from datashare_spacy_worker.constants import DATA_DIR
+from datashare_spacy_worker.core import SpacyProvider, spacy_ner
+from datashare_spacy_worker.objects import Category, NamedEntity, NlpTag, SpacySize
 
 _MODEL_PATH = DATA_DIR.joinpath("models.json")
 _ALL_LANGUAGES = list(json.loads(_MODEL_PATH.read_text()))

@@ -1,7 +1,7 @@
 from enum import Enum, EnumType, unique
 from functools import lru_cache
 
-from spacy_worker.objects import Category
+from datashare_spacy_worker.objects import Category
 
 _CONLL = ("LOC", "MISC", "ORG", "PER")
 _KOREAN = ("DT", "LC", "OG", "PS", "QT", "TI")

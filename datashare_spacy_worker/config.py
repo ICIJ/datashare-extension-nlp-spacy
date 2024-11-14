@@ -4,10 +4,10 @@ from icij_common.pydantic_utils import ICIJSettings, NoEnumModel
 from icij_worker.utils.logging_ import LogWithWorkerIDMixin
 from pydantic import Field
 
-import spacy_worker
-from spacy_worker.core import SpacyProvider
+import datashare_spacy_worker
+from datashare_spacy_worker.core import SpacyProvider
 
-_ALL_LOGGERS = [spacy_worker.__name__]
+_ALL_LOGGERS = [datashare_spacy_worker.__name__]
 
 
 class AppConfig(ICIJSettings, LogWithWorkerIDMixin, NoEnumModel):
@@ -55,5 +55,7 @@ class AppConfig(ICIJSettings, LogWithWorkerIDMixin, NoEnumModel):
             max_retry_wait_s=self.es_max_retry_wait_s,
             api_key=self.ds_api_key,
         )
-        client.transport._verified_elasticsearch = True
+        client.transport._verified_elasticsearch = (  # pylint: disable=protected-access
+            True
+        )
         return client

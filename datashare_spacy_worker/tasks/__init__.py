@@ -12,9 +12,15 @@ from pydantic import parse_obj_as
 from spacy import Language
 from spacy.tokens.doc import defaultdict
 
-from spacy_worker.core import spacy_ner as spacy_ner_
-from spacy_worker.objects import BatchDocument, Category, NamedEntity, NlpTag, SpacySize
-from spacy_worker.tasks.dependencies import (
+from datashare_spacy_worker.core import spacy_ner as spacy_ner_
+from datashare_spacy_worker.objects import (
+    BatchDocument,
+    Category,
+    NamedEntity,
+    NlpTag,
+    SpacySize,
+)
+from datashare_spacy_worker.tasks.dependencies import (
     lifespan_config,
     lifespan_es_client,
     lifespan_spacy_provider,
@@ -123,6 +129,7 @@ async def _process_docs(
     n_process: int,
     progress: RateProgress | None,
 ):
+    # pylint: disable=not-an-iterable
     batch = []
     n_docs = len(docs)
     if not n_docs:
