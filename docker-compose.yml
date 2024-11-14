@@ -1,0 +1,38 @@
+version: '3.7'
+
+services:
+  elasticsearch:
+    image: elasticsearch:7.17.25
+    container_name: ds-spacy-test-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - http.port=9200
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:9200" ]
+      interval: 3s
+      timeout: 1s
+      retries: 10
+      start_period: 20s
+
+  spacy-worker:
+    build:
+      context: .
+      target: worker
+    container_name: ds-spacy-test-worker
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      DS_DOCKER_SPACY_BATCH_SIZE: 1024
+      DS_DOCKER_SPACY_PIPELINE_BATCH_SIZE: 1024
+      DS_DOCKER_SPACY_LOG_LEVEL: DEBUG
+      DS_DOCKER_SPACY_MAX_PROCESSES: 1
+      DS_DOCKER_SPACY_MAX_LANGUAGES_IN_MEMORY: 1
+      DS_DOCKER_ES_ADDRESS: http://elasticsearch:9200
+      ICIJ_WORKER_TYPE: amqp
+      ICIJ_WORKER_RABBITMQ_HOST: host.docker.internal
+      ICIJ_WORKER_RABBITMQ_PORT: 5672
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

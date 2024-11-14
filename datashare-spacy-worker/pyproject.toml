@@ -14,6 +14,7 @@ where = ["spacy_worker/data/*.json"]
 python = "^3.10"
 
 icij-worker = { extras = ["amqp"], version = "^0.11.7" }
+icij-common = { extras = ["elasticsearch"], version = "^0.5.2" }
 # TODO: it seems that wheels are not built for spacy >= 3.7.6 for ARM
 # TODO: optionnally add CUDA support for when a GPU is available
 spacy = [
@@ -24,6 +25,8 @@ spacy = [
 ]
 spacy-curated-transformers = { version = "^0.2.2", optional = true }
 
+pycountry = "^24.6.1"
+setuptools = "^75.5.0"
 [tool.poetry.extras]
 transformers = [
     "spacy-curated-transformers"
@@ -43,5 +46,5 @@ build-backend = "poetry.core.masonry.api"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 markers = [
-    "pretest: test which will run before unit test",
+    "integration: integration test",
 ]

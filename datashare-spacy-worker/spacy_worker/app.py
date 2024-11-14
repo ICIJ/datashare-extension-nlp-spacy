@@ -1,9 +1,7 @@
-from typing import Dict, List, Optional
-
 from icij_worker import AsyncApp
 from icij_worker.typing_ import RateProgress
 
-from spacy_worker.tasks import spacy_ner as spacy_ner_
+from spacy_worker.tasks import spacy_ner_task as spacy_ner_
 from spacy_worker.tasks.dependencies import APP_LIFESPAN_DEPS
 
 app = AsyncApp("spacy", dependencies=APP_LIFESPAN_DEPS)
@@ -11,12 +9,17 @@ app = AsyncApp("spacy", dependencies=APP_LIFESPAN_DEPS)
 
 @app.task(name="spacy-ner")
 async def spacy_ner(
-    texts: List[str],
-    language: str,
+    docs: list[dict],
+    categories: list[str] = None,
     *,
-    categories: List[str] = None,
-    progress: Optional[RateProgress] = None,
-) -> List[List[Dict]]:
+    model_size: str | None = None,
+    max_length: int,
+    progress: RateProgress | None = None,
+) -> int:
     return await spacy_ner_(
-        texts, language=language, categories=categories, progress=progress
+        docs,
+        categories=categories,
+        model_size=model_size,
+        progress=progress,
+        max_length=max_length,
     )
