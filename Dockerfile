@@ -14,9 +14,9 @@ ENV PATH="$HOME/.cargo/bin:$PATH"
 
 WORKDIR $HOME/src/app
 ADD scripts  ./scripts/
-ADD datashare-spacy-worker/  ./datashare-spacy-worker/
-ADD data/models.json  ./datashare-spacy-worker/spacy_worker/data/
-WORKDIR $HOME/src/app/datashare-spacy-worker
+ADD datashare_spacy_worker/  ./datashare_spacy_worker/
+ADD data/models.json  ./datashare_spacy_worker/data/
+WORKDIR $HOME/src/app/datashare_spacy_worker
 
 FROM worker-base AS worker
 ARG n_workers

@@ -17,7 +17,7 @@ from icij_common.pydantic_utils import LowerCamelCaseModel, safe_copy
 from pydantic import Field, root_validator
 from typing_extensions import Self
 
-from spacy_worker.utils import lower_camel_to_snake_case
+from datashare_spacy_worker.utils import lower_camel_to_snake_case
 
 
 @unique
@@ -100,6 +100,7 @@ class NamedEntity(LowerCamelCaseModel):
 
     @root_validator(pre=True)
     def generate_id(cls, values: dict) -> dict:
+        # pylint: disable=no-self-argument
         values = {lower_camel_to_snake_case(k): v for k, v in values.items()}
         provided_mention_norm = values.get("mention_norm")
         hasher = md5()

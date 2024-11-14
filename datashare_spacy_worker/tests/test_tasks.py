@@ -3,15 +3,15 @@ import spacy
 from icij_common.es import ESClient, HITS, SOURCE, has_type
 from pydantic import parse_obj_as
 
-from spacy_worker.objects import (
+from datashare_spacy_worker.objects import (
     BatchDocument,
     Category,
     Document,
     NamedEntity,
     SpacySize,
 )
-from spacy_worker.tasks import get_n_process, spacy_ner_task
-from spacy_worker.tests.conftest import TEST_PROJECT
+from datashare_spacy_worker.tasks import get_n_process, spacy_ner_task
+from datashare_spacy_worker.tests.conftest import TEST_PROJECT
 
 
 @pytest.mark.parametrize(

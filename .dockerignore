@@ -1,5 +1,5 @@
 *
 !datashare-spacy-worker
-datashare-spacy-worker/spacy_worker/tests
+datashare_spacy_worker/tests
 !data/models.json
 !scripts

@@ -8,10 +8,10 @@ from elasticsearch._async.helpers import async_streaming_bulk
 from icij_common.es import DOC_ROOT_ID, ESClient, ES_DOCUMENT_TYPE, ID
 from icij_worker import AMQPWorkerConfig
 
-from spacy_worker.app import app
-from spacy_worker.config import AppConfig
-from spacy_worker.objects import BatchDocument, Document
-from spacy_worker.tasks import lifespan_es_client
+from datashare_spacy_worker.app import app
+from datashare_spacy_worker.config import AppConfig
+from datashare_spacy_worker.objects import BatchDocument, Document
+from datashare_spacy_worker.tasks import lifespan_es_client
 
 
 @pytest.fixture(scope="session")
@@ -63,6 +63,7 @@ def test_worker_config(test_app_config_path: Path) -> AMQPWorkerConfig:
 
 @pytest.fixture(scope="session")
 async def app_lifetime_deps(event_loop, test_worker_config: AMQPWorkerConfig):
+    # pylint: disable=unused-argument
     worker_id = "test-worker-id"
     async with app.lifetime_dependencies(
         worker_config=test_worker_config, worker_id=worker_id
@@ -72,6 +73,7 @@ async def app_lifetime_deps(event_loop, test_worker_config: AMQPWorkerConfig):
 
 @pytest.fixture(scope="session")
 async def es_test_client_session(app_lifetime_deps) -> ESClient:
+    # pylint: disable=unused-argument
     es = lifespan_es_client()
     await es.indices.delete(index="_all")
     await es.indices.create(index=TEST_PROJECT, body=_INDEX_BODY)

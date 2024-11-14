@@ -4,8 +4,8 @@ version = "0.1.0"
 description = "Spacy NLP worker for Datashare"
 authors = ["Clément Doumouro <cdoumouro@icij.org>"]
 readme = "README.md"
-packages = [{ include = "spacy_worker" }]
-exclude = ["spacy_worker/tests"]
+packages = [{ include = "datashare_spacy_worker" }]
+exclude = ["datashare_spacy_worker/tests"]
 
 [tool.setuptools.packages.find]
 where = ["spacy_worker/data/*.json"]

@@ -1,8 +1,8 @@
 from icij_worker import AsyncApp
 from icij_worker.typing_ import RateProgress
 
-from spacy_worker.tasks import spacy_ner_task as spacy_ner_
-from spacy_worker.tasks.dependencies import APP_LIFESPAN_DEPS
+from datashare_spacy_worker.tasks import spacy_ner_task as spacy_ner_
+from datashare_spacy_worker.tasks.dependencies import APP_LIFESPAN_DEPS
 
 app = AsyncApp("spacy", dependencies=APP_LIFESPAN_DEPS)
 
