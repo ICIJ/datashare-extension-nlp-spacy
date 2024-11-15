@@ -1,5 +1,8 @@
 *
-!datashare-spacy-worker
+!datashare_spacy_worker
 datashare_spacy_worker/tests
 !data/models.json
+!poetry.lock
+!pyproject.toml
+!README.md
 !scripts
