@@ -862,13 +862,13 @@ typing = ["types-PyYAML", "types-requests", "types-simplejson", "types-toml", "t
 
 [[package]]
 name = "icij-common"
-version = "0.5.2"
+version = "0.5.3"
 description = "Common utils for ICIJ libs"
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "icij_common-0.5.2-py3-none-any.whl", hash = "sha256:6bf4bafe1e078ea51011f576cfc6bf625059103665d9465f002622a8f4e5b612"},
-    {file = "icij_common-0.5.2.tar.gz", hash = "sha256:022560bb90a714f35e5d3cc8e29f769f88910f3c54c376f3440672a3eb13b44b"},
+    {file = "icij_common-0.5.3-py3-none-any.whl", hash = "sha256:e14d7b82a39e62223fff6d6d5de7f79ebe02bbf7b79f6c58a027be0775278924"},
+    {file = "icij_common-0.5.3.tar.gz", hash = "sha256:7824e16ebc61dece0f7cece39bac56705c051fc035c82e275696fb5bc075ca0c"},
 ]
 
 [package.dependencies]
@@ -883,13 +883,13 @@ neo4j = ["neo4j (>=5.0.0,<6.0.0)"]
 
 [[package]]
 name = "icij-worker"
-version = "0.11.7"
+version = "0.11.9"
 description = "Create asynchronous tasks from Python functions"
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "icij_worker-0.11.7-py3-none-any.whl", hash = "sha256:c6ce13d60f03c2fe88869a1552959d1688cc07936dc1200802810d85471e279a"},
-    {file = "icij_worker-0.11.7.tar.gz", hash = "sha256:1119aff4fab398632ff90ce863b39033c2ad10296abb90dac1c76a38076771bb"},
+    {file = "icij_worker-0.11.9-py3-none-any.whl", hash = "sha256:ac4940b065e1de7d2f3f9bfbadc6ec4fe3a0d6efcf80cfbf745c9ecccf5a2573"},
+    {file = "icij_worker-0.11.9.tar.gz", hash = "sha256:3ada73806bf18051def08b7c806330f0c7c1cf912909a2e2c5e631190cee15f6"},
 ]
 
 [package.dependencies]
@@ -3521,4 +3521,4 @@ transformers = ["spacy-curated-transformers"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "cf69d82868bdd551bbd7b308027cca2b73afb6cf4226ee1b2bf22d0b662b6fbc"
+content-hash = "a3616256c1c92f8a0c76a3a7a4db23589a7a6e4721a1ecdbba66ab204286f862"
