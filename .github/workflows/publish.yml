@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create release
-        run: Create GH release 
+        run: Create GH release
           gh release create "$tag" --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
 
-  publish-worker:
+  publish-docker-worker:
     needs: [ create-release ]
     runs-on: ubuntu-latest
     steps:
@@ -47,7 +47,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  publish-worker-transformers:
+  publish-docker-worker-transformers:
     needs: [ create-release ]
     runs-on: ubuntu-latest
     steps:
@@ -77,6 +77,44 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  publish-pyinstaller-worker:
+    needs: [ create-release ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ 'windows-latest', 'ubuntu-latest, 'macos-latest' ]
+    steps:
+      - name: Set up env vars
+        run: |
+          echo "_BUILD_OS=${RUNNER_OS,,}">>${GITHUB_ENV}
+          echo "_BUILD_OS=${RUNNER_OS,,}">>${GITHUB_ENV}
+      - uses: actions/checkout@v4
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'poetry'
+      - name: Install poetry
+        run: poetry install
+      # TODO: version the artifact
+      - name: Build project binary
+        run: |
+          poetry shell
+          PYTHONHASHSEED=42 PYTHONOPTIMIZE=1 pyinstaller datashare_spacy_worker/__main__.py \
+            --distpath ./bin \
+            -F \
+            -y \
+            --name datashare-spacy-worker \
+            --specpath ./bin \
+            --add-data ../data/models.json:datashare_spacy_worker/data/ \
+            -p datashare_spacy_worker
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 'datashare-spacy-worker-${{ env._BUILD_OS }}-${{env.GITHUB_REF_NAME}}'
+          path: './bin/datashare-spacy-worker'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
