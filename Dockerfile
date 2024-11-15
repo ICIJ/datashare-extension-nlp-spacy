@@ -14,13 +14,13 @@ ENV PATH="$HOME/.cargo/bin:$PATH"
 
 WORKDIR $HOME/src/app
 ADD scripts  ./scripts/
-ADD datashare_spacy_worker/  ./datashare_spacy_worker/
 ADD data/models.json  ./datashare_spacy_worker/data/
-WORKDIR $HOME/src/app/datashare_spacy_worker
+ADD datashare_spacy_worker/  ./datashare_spacy_worker/
+ADD poetry.lock pyproject.toml README.md ./
 
 FROM worker-base AS worker
 ARG n_workers
-ENV N_PROCESSING_WORKERS $n_workers
+ENV N_PROCESSING_WORKERS=$n_workers
 RUN --mount=type=cache,target=~/.cache/pypoetry poetry install
 RUN rm -rf ~/.cache/pip ~/.cache/pypoetry/cache ~/.cache/pypoetry/artifacts
 ENTRYPOINT ["/home/user/src/app/scripts/worker_entrypoint.sh"]
@@ -28,7 +28,7 @@ ENTRYPOINT ["/home/user/src/app/scripts/worker_entrypoint.sh"]
 
 FROM worker-base AS worker-transformers
 ARG n_workers
-ENV N_PROCESSING_WORKERS $n_workers
+ENV N_PROCESSING_WORKERS=$n_workers
 RUN --mount=type=cache,target=~/.cache/pypoetry poetry install -E transformers
 RUN rm -rf ~/.cache/pip ~/.cache/pypoetry/cache ~/.cache/pypoetry/artifacts
 ENTRYPOINT ["/home/user/src/app/scripts/worker_entrypoint.sh"]
