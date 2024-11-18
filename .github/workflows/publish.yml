@@ -113,7 +113,7 @@ jobs:
             -y \
             --name datashare-spacy-worker \
             --specpath ./bin \
-            --add-data ../data/models.json:datashare_spacy_worker/data/ \
+            --add-data ../datashare_spacy_worker/data/models.json:datashare_spacy_worker/data/ \
             -p datashare_spacy_worker
       - uses: actions/upload-artifact@v4
         with:
