@@ -52,6 +52,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   publish-docker-worker-transformers:
+    if: false
     needs: [ create-release ]
     runs-on: ubuntu-latest
     steps:
