@@ -98,21 +98,25 @@ jobs:
           brew update
           brew install bash
           echo "/usr/local/bin" >> $GITHUB_PATH
+
       - name: Set up env vars
         run: |
           echo "_BUILD_OS=${RUNNER_OS,,}">>${GITHUB_ENV}
           echo "_BUILD_OS=${RUNNER_OS,,}">>${GITHUB_ENV}
-          echo "${GH_REF//"refs\/tags\/"/}">>${GITHUB_ENV}
+
       - uses: actions/checkout@v4
+
       - name: Install poetry
         run: pipx install poetry
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'poetry'
+
       - name: Install poetry and pyinstaller
         run: poetry install && poetry run python -m pip install pyinstaller==6.11.1
-      # TODO: version the artifact
+
       - name: Build project binary
         shell: bash
         run: |
@@ -120,14 +124,17 @@ jobs:
             --distpath ./bin \
             -F \
             -y \
-            --name datashare-spacy-worker \
+            --name "datashare-spacy-worker-$_BUILD_OS-$tag" \
             --specpath ./bin \
             --add-data ../datashare_spacy_worker/data/models.json:datashare_spacy_worker/data/ \
             -p datashare_spacy_worker
-      - uses: actions/upload-artifact@v4
-        with:
-          name: 'datashare-spacy-worker-${{ env._BUILD_OS }}-${{env.GITHUB_REF}}'
-          path: './bin/datashare-spacy-worker'
+
+      - name: Push executable to GH release
+        shell: bash
+        run: gh release upload "$tag" ./bin/datashare-spacy-worker-$_BUILD_OS-$tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
