@@ -91,6 +91,13 @@ jobs:
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
     steps:
+      - name: Install Bash 4 and GNU sed on Mac
+        if: runner.os == 'macOS'
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          brew update
+          brew install bash
+          echo "/usr/local/bin" >> $GITHUB_PATH
       - name: Set up env vars
         run: |
           echo "_BUILD_OS=${RUNNER_OS,,}">>${GITHUB_ENV}
