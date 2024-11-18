@@ -111,6 +111,7 @@ jobs:
             bin_suffix="-$build_os-$tag"
           fi
           echo "BIN_SUFFIX=$bin_suffix">>${GITHUB_ENV}
+          echo "BUILD_OS=$build_os">>${GITHUB_ENV}
           echo Build os suffix: $bin_suffix
         env:
           tag: ${{ github.ref_name }}
@@ -140,6 +141,9 @@ jobs:
             --specpath ./bin \
             --add-data ../datashare_spacy_worker/data/models.json:datashare_spacy_worker/data/ \
             -p datashare_spacy_worker
+          if [[ $BUILD_OS == "windows" ]]; then
+            mv "./bin/datashare-spacy-worker$BIN_SUFFIX.exe" "./bin/datashare-spacy-worker$BIN_SUFFIX"
+          fi
 
       - name: Push executable to GH release
         shell: bash
