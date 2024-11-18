@@ -100,9 +100,21 @@ jobs:
           echo "/usr/local/bin" >> $GITHUB_PATH
 
       - name: Set up env vars
+        shell: bash
         run: |
-          echo "_BUILD_OS=${RUNNER_OS,,}">>${GITHUB_ENV}
-          echo "_BUILD_OS=${RUNNER_OS,,}">>${GITHUB_ENV}
+          build_os="${RUNNER_OS,,}"
+          if [[ $build_os == "macos" ]]; then
+            arch=
+            if [ $(uname -m) = "arm64" ]; then arch="aarch64"; else arch="x86_64"; fi
+            bin_suffix="-$build_os-$arch-$tag"
+          else
+            bin_suffix="-$build_os-$tag"
+          fi
+          echo "BIN_SUFFIX=$bin_suffix">>${GITHUB_ENV}
+          echo Build os suffix: $bin_suffix
+        env:
+          tag: ${{ github.ref_name }}
+          
 
       - uses: actions/checkout@v4
 
@@ -124,14 +136,14 @@ jobs:
             --distpath ./bin \
             -F \
             -y \
-            --name "datashare-spacy-worker-$_BUILD_OS-$tag" \
+            --name "datashare-spacy-worker$BIN_SUFFIX" \
             --specpath ./bin \
             --add-data ../datashare_spacy_worker/data/models.json:datashare_spacy_worker/data/ \
             -p datashare_spacy_worker
 
       - name: Push executable to GH release
         shell: bash
-        run: gh release upload "$tag" ./bin/datashare-spacy-worker-$_BUILD_OS-$tag
+        run: gh release upload "$tag" "./bin/datashare-spacy-worker$BIN_SUFFIX"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
