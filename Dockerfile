@@ -14,7 +14,6 @@ ENV PATH="$HOME/.cargo/bin:$PATH"
 
 WORKDIR $HOME/src/app
 ADD scripts  ./scripts/
-ADD data/models.json  ./datashare_spacy_worker/data/
 ADD datashare_spacy_worker/  ./datashare_spacy_worker/
 ADD poetry.lock pyproject.toml README.md ./
 
