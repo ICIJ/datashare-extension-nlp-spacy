@@ -9,9 +9,9 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Create release
-        run: Create GH release
-          gh release create "$tag" --generate-notes
+      - uses: actions/checkout@v4
+      - name: Create GH release
+        run: gh release create "$tag" --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
@@ -84,7 +84,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [ 10, 12, 14 ]
         os: [ ubuntu-latest, windows-latest, macos-latest' ]
     steps:
       - name: Set up env vars
