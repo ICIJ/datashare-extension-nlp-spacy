@@ -9,7 +9,7 @@ app = AsyncApp("spacy", dependencies=APP_LIFESPAN_DEPS)
 PYTHON_TASK_GROUP = "PYTHON"
 
 
-@app.task(name="spacy-ner", group=TaskGroup(name=PYTHON_TASK_GROUP))
+@app.task(name="BatchNlp", group=TaskGroup(name=PYTHON_TASK_GROUP))
 async def spacy_ner(
     docs: list[dict],
     categories: list[str] = None,
