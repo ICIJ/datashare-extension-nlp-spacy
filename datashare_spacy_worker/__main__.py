@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 from pathlib import Path
 from typing import Annotated
@@ -29,4 +30,6 @@ def main(
 
 
 if __name__ == "__main__":
+    # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
+    multiprocessing.freeze_support()
     cli_app()
