@@ -13,7 +13,7 @@ where = ["datashare_spacy_worker/data/*.json"]
 [tool.poetry.dependencies]
 python = "^3.10"
 
-icij-worker = { extras = ["amqp"], version = "^0.11.11" }
+icij-worker = { extras = ["amqp"], version = "^0.11.12" }
 icij-common = { extras = ["elasticsearch"], version = "^0.5.3" }
 # TODO: it seems that wheels are not built for spacy >= 3.7.6 for ARM
 # TODO: optionnally add CUDA support for when a GPU is available
