@@ -883,13 +883,13 @@ neo4j = ["neo4j (>=5.0.0,<6.0.0)"]
 
 [[package]]
 name = "icij-worker"
-version = "0.11.12"
+version = "0.11.16"
 description = "Create asynchronous tasks from Python functions"
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "icij_worker-0.11.12-py3-none-any.whl", hash = "sha256:27557e9888be8569092d60174875d3043a6268da0ac873c8eae76006ca6f1b9a"},
-    {file = "icij_worker-0.11.12.tar.gz", hash = "sha256:a80e5d766a2e90e6e85e4fc412cee37d06600c0cff397f340a1c67a4ebab6857"},
+    {file = "icij_worker-0.11.16-py3-none-any.whl", hash = "sha256:fef746d718c90b52bca7afd71128f3be98d0c291e6696014925afab093357c35"},
+    {file = "icij_worker-0.11.16.tar.gz", hash = "sha256:1987562b1058692ecd74f1aca73787b4caaa9548180d27606d8032808cb4d56a"},
 ]
 
 [package.dependencies]
@@ -3521,4 +3521,4 @@ transformers = ["spacy-curated-transformers"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "283cbd85e8e8c635f677a615bfcd3bb3db2a1917e2d19a20cbf25bbf87c7e10a"
+content-hash = "dd6a5f9de8ea9083312c9da35260a9c1a12bd04ca7bbca41fca23181631afe82"
