@@ -138,6 +138,8 @@ jobs:
             -F \
             -y \
             --name "datashare-spacy-worker$BIN_SUFFIX" \
+            --hidden-import spacy \
+            --additional-hooks-dir hooks \
             --specpath ./bin \
             --add-data ../datashare_spacy_worker/data/models.json:datashare_spacy_worker/data/ \
             -p datashare_spacy_worker

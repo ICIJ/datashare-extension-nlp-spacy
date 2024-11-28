@@ -2,16 +2,25 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
+import urllib.request
+import zipfile
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Generator, Iterable, Iterator
+from urllib.parse import urljoin
 
 import spacy
 from icij_worker.typing_ import RateProgress
 from icij_worker.utils.progress import to_raw_progress
-from spacy import Language as SpacyLanguage
-from spacy.cli import download
+from spacy import Language as SpacyLanguage, about as spacy_about
+from spacy.cli.download import (
+    get_compatibility,
+    get_model_filename,
+    get_version,
+)
 from spacy.tokens import Doc as SpacyDoc, Span
-from spacy.util import is_package
+from spacy.util import load_model_from_init_py
 
 from datashare_spacy_worker.constants import DATA_DIR
 from datashare_spacy_worker.ner_label_scheme import NERLabelScheme
@@ -111,10 +120,15 @@ class SpacyProvider:
         # TODO: use GPU acceleration using spacy.prefer_gpu() + spacy[cuda]
         # TODO: check if we can exclude globally or we must do it language per langauge
         exclude = model.get("exclude", _DEFAULT_EXCLUDE)
-        if not is_package(model_name):
+        # We have to do some dark magic because of pyinstaller...
+        model_path = DATA_DIR / model_name
+        if not model_path.exists():
             logger.info("downloading spacy model  %s...", model_name)
-            download(model_name)
-        return spacy.load(model_name, exclude=exclude)
+            # Hack due to the fact pyinstaller doesn't support a python script from
+            # the pyinstaller binary. Sadly this is the case when installing a spacy
+            # model...
+            _fixed_pysinstaller_download(model_name, model_path)
+        return load_model_from_init_py(model_path / "__init__.py", exclude=exclude)
 
 
 def _merge_subdocs(sub_docs: list[SpacyDoc]) -> SpacyDoc:
@@ -148,3 +162,24 @@ def _spacy_doc_to_ds_tag(
         return None
     start = ent.start_char
     return NlpTag(start=start, mention=ent.text, category=category)
+
+
+def _fixed_pysinstaller_download(model_name: str, model_path: Path):
+    # Very ugly by pyinstaller forces to do ugly things...
+    compatibility = get_compatibility()
+    version = get_version(model_name, compatibility)
+    filename = get_model_filename(model_name, version)
+    base_url = spacy_about.__download_url__
+    # urljoin requires that the path ends with /, or the last path part will be
+    # dropped
+    if not base_url.endswith("/"):
+        base_url = spacy_about.__download_url__ + "/"
+    download_url = urljoin(base_url, filename)
+    wheel_name = Path(filename).name
+    wheel_path = model_path.parent / wheel_name
+    urllib.request.urlretrieve(download_url, wheel_path)
+    with zipfile.ZipFile(wheel_path, "r") as zip_ref:
+        zip_ref.extractall(model_path.parent)
+    for dir in model_path.parent.iterdir():
+        if dir.is_dir() and dir.name.endswith(".dist-info"):
+            shutil.rmtree(dir)
