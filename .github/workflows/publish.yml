@@ -28,7 +28,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: icij/datashare-spacy-worker
+          images: icij/datashare-extension-nlp-spacy
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -60,7 +60,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: icij/datashare-spacy-worker-transformers
+          images: icij/datashare-extension-nlp-spacy-transformers
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -137,19 +137,19 @@ jobs:
             --distpath ./bin \
             -F \
             -y \
-            --name "datashare-spacy-worker$BIN_SUFFIX" \
+            --name "datashare-extension-nlp-spacy$BIN_SUFFIX" \
             --hidden-import spacy \
             --additional-hooks-dir hooks \
             --specpath ./bin \
             --add-data ../datashare_spacy_worker/data/models.json:datashare_spacy_worker/data/ \
             -p datashare_spacy_worker
           if [[ $BUILD_OS == "windows" ]]; then
-            mv "./bin/datashare-spacy-worker$BIN_SUFFIX.exe" "./bin/datashare-spacy-worker$BIN_SUFFIX"
+            mv "./bin/datashare-extension-nlp-spacy$BIN_SUFFIX.exe" "./bin/datashare-extension-nlp-spacy$BIN_SUFFIX"
           fi
 
       - name: Push executable to GH release
         shell: bash
-        run: gh release upload "$tag" "./bin/datashare-spacy-worker$BIN_SUFFIX"
+        run: gh release upload "$tag" "./bin/datashare-extension-nlp-spacy$BIN_SUFFIX"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}

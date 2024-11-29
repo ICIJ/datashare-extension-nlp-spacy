@@ -1,4 +1,4 @@
-name: Linting test for datashare-spacy-worker
+name: Linting test for datashare-extension-nlp-spacy
 
 on:
   push:
