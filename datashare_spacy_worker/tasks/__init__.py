@@ -217,6 +217,8 @@ async def _bulk_add_ne(
         }
         for ne in named_entities
     )
+    # TODO: make the refresh parameter configurable as it only needs to be set for
+    #  testing
     await async_bulk(es_client, actions, raise_on_error=True, refresh="wait_for")
 
 
