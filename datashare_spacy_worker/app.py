@@ -8,11 +8,14 @@ from datashare_spacy_worker.tasks import spacy_ner_task as spacy_ner_
 from datashare_spacy_worker.tasks.dependencies import APP_LIFESPAN_DEPS
 
 app = AsyncApp("spacy", dependencies=APP_LIFESPAN_DEPS)
-PYTHON_TASK_GROUP = "PYTHON"
+PYTHON_TASK_GROUP = "Python"
 _SPACY_PIPELINE = "SPACY"
 
 
-@app.task(name="BatchNlp", group=TaskGroup(name=PYTHON_TASK_GROUP))
+@app.task(
+    name="org.icij.datashare.tasks.BatchNlpTask",
+    group=TaskGroup(name=PYTHON_TASK_GROUP),
+)
 async def spacy_ner(
     docs: list[dict],
     categories: list[str] = None,
@@ -21,6 +24,7 @@ async def spacy_ner(
     max_length: int,
     progress: RateProgress | None = None,
     pipeline: Literal["SPACY"],
+    user: str,  # pylint: disable=unused-argument
 ) -> int:
     if pipeline != _SPACY_PIPELINE:
         raise ValueError(f"invalid pipeline: {pipeline} expected {_SPACY_PIPELINE}")

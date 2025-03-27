@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "datashare-extension-nlp-spacy"
-version = "0.1.4"
+version = "0.1.0"
 description = "Spacy NLP worker for Datashare"
 authors = ["Clément Doumouro <cdoumouro@icij.org>"]
 readme = "README.md"
