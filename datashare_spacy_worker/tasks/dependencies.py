@@ -19,8 +19,8 @@ _ES_CLIENT: ESClient | None = None
 def load_app_config(worker_config: WorkerConfig, **_):
     global _ASYNC_APP_CONFIG
     if worker_config.app_bootstrap_config_path is not None:
-        _ASYNC_APP_CONFIG = AppConfig.parse_file(
-            worker_config.app_bootstrap_config_path
+        _ASYNC_APP_CONFIG = AppConfig.model_validate_json(
+            worker_config.app_bootstrap_config_path.read_text()
         )
     else:
         _ASYNC_APP_CONFIG = AppConfig()
@@ -30,7 +30,7 @@ def setup_loggers(worker_id: str, **_):
     config = lifespan_config()
     config.setup_loggers(worker_id=worker_id)
     logger.info("worker loggers ready to log 💬")
-    logger.info("app config: %s", config.json(indent=2))
+    logger.info("app config: %s", config.model_dump_json(indent=2))
 
 
 def lifespan_config() -> AppConfig:

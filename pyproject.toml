@@ -1,50 +1,49 @@
-[tool.poetry]
+[project]
 name = "datashare-extension-nlp-spacy"
 version = "0.1.0"
 description = "Spacy NLP worker for Datashare"
-authors = ["Clément Doumouro <cdoumouro@icij.org>"]
+authors = [
+  { name = "Clément Doumouro", email = "cdoumouro@icij.org" },
+]
 readme = "README.md"
-packages = [{ include = "datashare_spacy_worker" }]
-exclude = ["datashare_spacy_worker/tests"]
-
-[tool.setuptools.packages.find]
-where = ["datashare_spacy_worker/data/*.json"]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-
-icij-worker = { extras = ["amqp"], version = "^0.11.16" }
-icij-common = { extras = ["elasticsearch"], version = "^0.5.3" }
-# TODO: it seems that wheels are not built for spacy >= 3.7.6 for ARM
-# TODO: optionnally add CUDA support for when a GPU is available
-spacy = [
-    { platform = "darwin", version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "apple"] },
-    { version = ">3.7,<3.7.6", extras = ["ja", "ko", "th"] },
-    { platform = "darwin", version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "transformers", "apple"], markers = "extra == 'transformers'"},
-    { version = ">3.7,<3.7.6", extras = ["ja", "ko", "th", "transformers"], markers = "extra == 'transformers'"}
+requires-python = ">=3.10,<3.12"
+dependencies = [
+  "icij-worker[amqp,postgres]~=0.18",
+  "icij-common[elasticsearch]~=0.7.2",
+  "pycountry~=24.6",
+  "numpy<2.0",
+  "setuptools~=75.5",
+  "spacy[ja,ko,th]>3.7,<3.7.6; sys_platform != 'darwin'",
+  "spacy[ja,ko,th,apple]>3.7,<3.7.6; sys_platform == 'darwin'",
+  "spacy[ja,ko,th,transformers]>3.7,<3.7.6; sys_platform != 'darwin' and extra == 'transformers'",
+  "spacy[ja,ko,th,apple,transformers]>3.7,<3.7.6; sys_platform == 'darwin' and extra == 'transformers'",
+  "pydantic-settings>=2.8.1",
+  "pydantic>=2.11.1",
 ]
-spacy-curated-transformers = { version = "^0.2.2", optional = true }
 
-pycountry = "^24.6.1"
-setuptools = "^75.5.0"
-[tool.poetry.extras]
+[project.optional-dependencies]
 transformers = [
-    "spacy-curated-transformers"
+  "spacy-curated-transformers~=0.2.2"
 ]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.2"
-pytest-asyncio = "^0.24.0"
-requests = "^2.32.3"
-pylint = "^3.1.0"
+[dependency-groups]
+dev = [
+  "pytest~=8.3",
+  "pytest-asyncio~=0.24",
+  "requests~=2.32",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+ [tool.hatch.build.targets.wheel]
+packages = ["datashare_spacy_worker"]
+
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 markers = [
-    "integration: integration test",
+  "integration: integration test",
 ]

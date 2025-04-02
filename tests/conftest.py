@@ -50,7 +50,7 @@ def test_app_config() -> AppConfig:
 @pytest.fixture(scope="session")
 def test_app_config_path(tmpdir_factory, test_app_config: AppConfig) -> Path:
     config_path = Path(tmpdir_factory.mktemp("app_config")).joinpath("app_config.json")
-    config_path.write_text(test_app_config.json())
+    config_path.write_text(test_app_config.model_dump_json())
     return config_path
 
 

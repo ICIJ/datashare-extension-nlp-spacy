@@ -5,7 +5,6 @@ import math
 import pycountry
 from elasticsearch._async.helpers import async_bulk
 from icij_common.es import DOC_CONTENT, DOC_LANGUAGE, ESClient, ID_
-from icij_common.pydantic_utils import jsonable_encoder
 from icij_worker.typing_ import RateProgress
 from icij_worker.utils.progress import to_raw_progress
 from pydantic import parse_obj_as
@@ -206,7 +205,7 @@ async def _update_and_consume_buffer(
 async def _bulk_add_ne(
     es_client: ESClient, named_entities: list[NamedEntity], project: str
 ):
-    named_entities = jsonable_encoder(named_entities)
+    named_entities = [ne.model_dump() for ne in named_entities]
     actions = (
         {
             "_op_type": "update",

@@ -10,7 +10,7 @@ from datashare_spacy_worker.objects import (
     SpacySize,
 )
 from datashare_spacy_worker.tasks import spacy_ner_task
-from datashare_spacy_worker.tests.conftest import TEST_PROJECT
+from tests.conftest import TEST_PROJECT
 
 
 # TODO: this one would deserve a finer testing due to the multiple corner cases due to
