@@ -1,8 +1,9 @@
 from typing import ClassVar
 
-from icij_common.pydantic_utils import ICIJSettings, NoEnumModel
+from icij_common.pydantic_utils import ICIJSettings, icij_config, merge_configs
 from icij_worker.utils.logging_ import LogWithWorkerIDMixin
 from pydantic import Field
+from pydantic_settings import SettingsConfigDict
 
 import datashare_spacy_worker
 from datashare_spacy_worker.core import SpacyProvider
@@ -10,11 +11,12 @@ from datashare_spacy_worker.core import SpacyProvider
 _ALL_LOGGERS = [datashare_spacy_worker.__name__]
 
 
-class AppConfig(ICIJSettings, LogWithWorkerIDMixin, NoEnumModel):
-    class Config:
-        env_prefix = "DS_DOCKER_SPACY_"
+class AppConfig(ICIJSettings, LogWithWorkerIDMixin):
+    model_config = merge_configs(
+        icij_config(), SettingsConfigDict(env_prefix="DS_DOCKER_SPACY_")
+    )
 
-    loggers: ClassVar[list[str]] = Field(_ALL_LOGGERS, const=True)
+    loggers: ClassVar[list[str]] = Field(_ALL_LOGGERS, frozen=True)
 
     log_level: str = Field(default="INFO")
 
@@ -39,7 +41,7 @@ class AppConfig(ICIJSettings, LogWithWorkerIDMixin, NoEnumModel):
     def to_provider(self) -> SpacyProvider:
         return SpacyProvider(self.max_languages_in_memory)
 
-    def to_es_client(self, address: str | None = None) -> "ESClient":
+    def to_es_client(self, address: str | None = None) -> "ESClient":  # noqa: F821
         from icij_common.es import ESClient
 
         if address is None:
@@ -55,7 +57,5 @@ class AppConfig(ICIJSettings, LogWithWorkerIDMixin, NoEnumModel):
             max_retry_wait_s=self.es_max_retry_wait_s,
             api_key=self.ds_api_key,
         )
-        client.transport._verified_elasticsearch = (  # pylint: disable=protected-access
-            True
-        )
+        client.transport._verified_elasticsearch = True
         return client

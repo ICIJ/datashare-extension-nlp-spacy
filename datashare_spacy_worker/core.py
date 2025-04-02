@@ -5,21 +5,25 @@ import logging
 import shutil
 import urllib.request
 import zipfile
+from collections.abc import Generator, Iterable, Iterator
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Generator, Iterable, Iterator
+from types import TracebackType
+from typing import Any
 from urllib.parse import urljoin
 
 import spacy
 from icij_worker.typing_ import RateProgress
 from icij_worker.utils.progress import to_raw_progress
-from spacy import Language as SpacyLanguage, about as spacy_about
+from spacy import Language as SpacyLanguage
+from spacy import about as spacy_about
 from spacy.cli.download import (
     get_compatibility,
     get_model_filename,
     get_version,
 )
-from spacy.tokens import Doc as SpacyDoc, Span
+from spacy.tokens import Doc as SpacyDoc
+from spacy.tokens import Span
 from spacy.util import load_model_from_init_py
 
 from datashare_spacy_worker.constants import DATA_DIR
@@ -99,7 +103,9 @@ class SpacyProvider:
     def __enter__(self) -> SpacyProvider:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self, exc_type: type[Exception], exc_val: Exception, exc_tb: TracebackType
+    ):
         self._pipelines.clear()
 
     def get_ner(self, language: str, *, model_size: SpacySize) -> SpacyLanguage:
@@ -112,7 +118,6 @@ class SpacyProvider:
         return sent_split
 
     def _load_nlp(self, language: str, *, model_size: SpacySize) -> SpacyLanguage:
-        # pylint: disable=method-hidden
         logger.debug("loading spacy for %s...", language)
         model_size = model_size.value
         model = self._models[language]["sizes"][model_size]
@@ -164,7 +169,7 @@ def _spacy_doc_to_ds_tag(
     return NlpTag(start=start, mention=ent.text, category=category)
 
 
-def _fixed_pysinstaller_download(model_name: str, model_path: Path):
+def _fixed_pysinstaller_download(model_name: str, model_path: Path) -> None:
     # Very ugly by pyinstaller forces to do ugly things...
     compatibility = get_compatibility()
     version = get_version(model_name, compatibility)
@@ -180,6 +185,6 @@ def _fixed_pysinstaller_download(model_name: str, model_path: Path):
     urllib.request.urlretrieve(download_url, wheel_path)
     with zipfile.ZipFile(wheel_path, "r") as zip_ref:
         zip_ref.extractall(model_path.parent)
-    for dir in model_path.parent.iterdir():
-        if dir.is_dir() and dir.name.endswith(".dist-info"):
-            shutil.rmtree(dir)
+    for f in model_path.parent.iterdir():
+        if f.is_dir() and f.name.endswith(".dist-info"):
+            shutil.rmtree(f)

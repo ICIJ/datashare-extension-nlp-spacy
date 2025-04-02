@@ -18,7 +18,7 @@ def main(
     n_workers: Annotated[
         int, typer.Option("-n", "--n-workers", help="Number of NLP workers")
     ] = 1,
-):
+) -> None:
     os.environ["_TYPER_STANDARD_TRACEBACK"] = "1"
     start_workers(
         "datashare_spacy_worker.app.app",

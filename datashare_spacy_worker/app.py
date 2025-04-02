@@ -24,7 +24,7 @@ async def spacy_ner(
     max_length: int,
     progress: RateProgress | None = None,
     pipeline: Literal["SPACY"],
-    user: str,  # pylint: disable=unused-argument
+    user: str,  # noqa: ARG001
 ) -> int:
     if pipeline != _SPACY_PIPELINE:
         raise ValueError(f"invalid pipeline: {pipeline} expected {_SPACY_PIPELINE}")

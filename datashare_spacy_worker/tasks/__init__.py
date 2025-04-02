@@ -1,16 +1,15 @@
 import functools
-import multiprocessing
-
 import math
+import multiprocessing
+from collections import defaultdict
+
 import pycountry
 from elasticsearch._async.helpers import async_bulk
-from icij_common.es import DOC_CONTENT, DOC_LANGUAGE, ESClient, ID_
-from icij_common.pydantic_utils import jsonable_encoder
+from icij_common.es import DOC_CONTENT, DOC_LANGUAGE, ID_, ESClient
 from icij_worker.typing_ import RateProgress
 from icij_worker.utils.progress import to_raw_progress
-from pydantic import parse_obj_as
+from pydantic import TypeAdapter
 from spacy import Language
-from spacy.tokens.doc import defaultdict
 
 from datashare_spacy_worker.core import spacy_ner as spacy_ner_
 from datashare_spacy_worker.objects import (
@@ -41,10 +40,10 @@ async def spacy_ner_task(
     if not docs:
         return len(docs)
     if categories is None:
-        categories = set(c.value for c in _DEFAULT_CATEGORIES)
+        categories = {c.value for c in _DEFAULT_CATEGORIES}
     else:
-        categories = set(Category(c) for c in categories)
-    docs = parse_obj_as(list[BatchDocument], docs)
+        categories = {Category(c) for c in categories}
+    docs = TypeAdapter(list[BatchDocument]).validate_python(docs)
     if progress is not None:
         progress = to_raw_progress(progress, max_progress=len(docs))
     config = lifespan_config()
@@ -82,21 +81,20 @@ class _TagsBuffer:
         self._n_doc_chunks: dict[int, int] = dict()
         self._doc_tags: dict[int, list[list[NlpTag]]] = defaultdict(list)
 
-    def add_doc(self, i: int, doc: dict):
+    def add_doc(self, i: int, doc: dict) -> None:
         self._n_doc_chunks[i] = math.ceil(len(doc[DOC_CONTENT]) / self._max_length)
 
-    def add_batch_tags(self, batch_tags: list[list[NlpTag]]):
+    def add_batch_tags(self, batch_tags: list[list[NlpTag]]) -> None:
         for tag_i, tags in enumerate(batch_tags):
             chunks_tags = self._doc_tags[self._batch_ix_to_doc_ix[tag_i]]
             offset = self._max_length * len(chunks_tags)
-            tags = [t.with_offset(offset) for t in tags]
-            chunks_tags.append(tags)
+            chunks_tags.append([t.with_offset(offset) for t in tags])
         for doc_i, tags in self._doc_tags.items():
             if len(tags) != self._n_doc_chunks[doc_i]:
                 continue
         self._batch_ix_to_doc_ix.clear()
 
-    def set_batch_doc_ix(self, doc_ix: int):
+    def set_batch_doc_ix(self, doc_ix: int) -> None:
         new_ix = len(self._batch_ix_to_doc_ix)
         self._batch_ix_to_doc_ix[new_ix] = doc_ix
 
@@ -117,8 +115,8 @@ class _TagsBuffer:
 
 async def _process_docs(
     docs: list[BatchDocument],
-    ner,
-    sent_split,
+    ner: Language,
+    sent_split: Language,
     categories: set[Category],
     es_client: ESClient,
     *,
@@ -128,12 +126,11 @@ async def _process_docs(
     ne_buffer_size: int,
     n_process: int,
     progress: RateProgress | None,
-):
-    # pylint: disable=not-an-iterable
+) -> int | None:
     batch = []
     n_docs = len(docs)
     if not n_docs:
-        return
+        return None
     project = docs[0].project
     tags_buffer = _TagsBuffer(max_length)
     ne_buffer = []
@@ -205,8 +202,8 @@ async def _update_and_consume_buffer(
 
 async def _bulk_add_ne(
     es_client: ESClient, named_entities: list[NamedEntity], project: str
-):
-    named_entities = jsonable_encoder(named_entities)
+) -> None:
+    named_entities = [ne.model_dump() for ne in named_entities]
     actions = (
         {
             "_op_type": "update",

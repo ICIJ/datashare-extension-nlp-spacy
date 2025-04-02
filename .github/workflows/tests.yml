@@ -7,7 +7,7 @@ on:
     paths:
       - 'datashare_spacy_worker/**.py'
       - 'pyproject.toml'
-      - 'poetry.lock'
+      - 'uv.lock'
       - '.github/workflows/*-worker.yml'
 
 jobs:
@@ -15,23 +15,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: psf/black@stable
+      - uses: astral-sh/ruff-action@v3
         with:
-          options: "--check --verbose"
-          jupyter: true
-          src: "."
-          version: "~= 24.2.0"
-      - name: Install poetry
-        run: pipx install poetry
+          args: format --check --config qa/ruff.toml
+          version: 0.11.2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.6.7"
+          python-version: "3.10"
+          enable-cache: true
       - name: Setup Python project
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: poetry
-      - run: poetry install -v --with dev --sync
+          python-version: "3.10"
       - name: Run tests
-        run: |
-          poetry run python -m pytest -vvv --cache-clear --show-capture=all -r A .
+        run: uv run --dev --frozen pytest -vvv --cache-clear --show-capture=all -r A tests
     services:
       elasticsearch:
         image: elasticsearch:7.17.25

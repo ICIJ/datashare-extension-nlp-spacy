@@ -1,5 +1,5 @@
 import pytest
-from icij_common.es import ESClient, HITS, SOURCE, has_type
+from icij_common.es import HITS, SOURCE, ESClient, has_type
 from pydantic import parse_obj_as
 
 from datashare_spacy_worker.objects import (
@@ -10,14 +10,14 @@ from datashare_spacy_worker.objects import (
     SpacySize,
 )
 from datashare_spacy_worker.tasks import spacy_ner_task
-from datashare_spacy_worker.tests.conftest import TEST_PROJECT
+from tests.conftest import TEST_PROJECT
 
 
 # TODO: this one would deserve a finer testing due to the multiple corner cases due to
 #  interactions between batch_size, buffer_size and so on
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "categories,expected_entities",
+    ("categories", "expected_entities"),
     [
         (
             None,
@@ -96,12 +96,11 @@ async def test_spacy_ner_task_int(
     categories: list[Category] | None,
     expected_entities: list[NamedEntity],
     test_es_client: ESClient,
-    populate_es: list[Document],
+    populate_es: list[Document],  # noqa: ARG001
     batch_docs: list[BatchDocument],
-):
-    # pylint: disable=unused-argument
+) -> None:
     # Given
-    docs = [d.dict() for d in batch_docs]
+    docs = [d.model_dump() for d in batch_docs]
     model_size = SpacySize.SMALL
     max_length = 62
 

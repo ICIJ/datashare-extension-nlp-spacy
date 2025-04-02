@@ -1,4 +1,3 @@
-# pylint: disable=redefined-outer-name
 import json
 
 import pytest
@@ -20,7 +19,7 @@ def test_spacy_provider() -> SpacyProvider:
     return SpacyProvider(max_languages=1)
 
 
-def test_spacy_provider_get_ner(test_spacy_provider: SpacyProvider):
+def test_spacy_provider_get_ner(test_spacy_provider: SpacyProvider) -> None:
     # Given
     language = "en"
     provider = test_spacy_provider
@@ -30,7 +29,7 @@ def test_spacy_provider_get_ner(test_spacy_provider: SpacyProvider):
         provider.get_ner(language, model_size=SpacySize.SMALL)
 
 
-def test_spacy_provider_get_sent_split(test_spacy_provider: SpacyProvider):
+def test_spacy_provider_get_sent_split(test_spacy_provider: SpacyProvider) -> None:
     # Given
     language = "en"
     model_size = SpacySize.SMALL
@@ -42,13 +41,13 @@ def test_spacy_provider_get_sent_split(test_spacy_provider: SpacyProvider):
 
 
 @pytest.mark.skip
-def test_spacy_model_compatibility():
+def test_spacy_model_compatibility() -> None:
     # Given
     compatibility_url = (
         "https://raw.githubusercontent.com/explosion/spacy-models/"
         "master/compatibility.json"
     )
-    r = requests.get(compatibility_url)  # pylint: disable=missing-timeout
+    r = requests.get(compatibility_url)
     r.raise_for_status()
     version = Version(spacy.__version__)
     version = f"{version.major}.{version.minor}"
@@ -62,7 +61,7 @@ def test_spacy_model_compatibility():
 
 
 @pytest.mark.parametrize(
-    "categories,expected_entities",
+    ("categories", "expected_entities"),
     [
         (
             [Category.LOC, Category.PER, Category.ORG],
@@ -93,7 +92,7 @@ async def test_spacy_ner(
     expected_entities: list[list[NamedEntity]],
     text_0: str,
     text_1: str,
-):
+) -> None:
     # Given
     texts = [text_0, text_1]
     language = "en"

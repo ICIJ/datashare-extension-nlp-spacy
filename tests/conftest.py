@@ -1,11 +1,10 @@
-# pylint: disable=redefined-outer-name
 import asyncio
+from collections.abc import AsyncGenerator, Generator, Iterator
 from pathlib import Path
-from typing import AsyncGenerator, Generator, Iterator
 
 import pytest
 from elasticsearch._async.helpers import async_streaming_bulk
-from icij_common.es import DOC_ROOT_ID, ESClient, ES_DOCUMENT_TYPE, ID
+from icij_common.es import DOC_ROOT_ID, ES_DOCUMENT_TYPE, ID, ESClient
 from icij_worker import AMQPWorkerConfig
 
 from datashare_spacy_worker.app import app
@@ -15,8 +14,7 @@ from datashare_spacy_worker.tasks import lifespan_es_client
 
 
 @pytest.fixture(scope="session")
-def event_loop(request) -> Iterator[asyncio.AbstractEventLoop]:
-    # pylint: disable=unused-argument
+def event_loop(request) -> Iterator[asyncio.AbstractEventLoop]:  # noqa: ANN001,ARG001
     """Create an instance of the default event loop for each test case."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
@@ -48,9 +46,9 @@ def test_app_config() -> AppConfig:
 
 
 @pytest.fixture(scope="session")
-def test_app_config_path(tmpdir_factory, test_app_config: AppConfig) -> Path:
+def test_app_config_path(tmpdir_factory, test_app_config: AppConfig) -> Path:  # noqa: ANN001
     config_path = Path(tmpdir_factory.mktemp("app_config")).joinpath("app_config.json")
-    config_path.write_text(test_app_config.json())
+    config_path.write_text(test_app_config.model_dump_json())
     return config_path
 
 
@@ -62,8 +60,7 @@ def test_worker_config(test_app_config_path: Path) -> AMQPWorkerConfig:
 
 
 @pytest.fixture(scope="session")
-async def app_lifetime_deps(event_loop, test_worker_config: AMQPWorkerConfig):
-    # pylint: disable=unused-argument
+async def app_lifetime_deps(event_loop, test_worker_config: AMQPWorkerConfig) -> None:  # noqa: ARG001,ANN001
     worker_id = "test-worker-id"
     async with app.lifetime_dependencies(
         worker_config=test_worker_config, worker_id=worker_id
@@ -72,15 +69,14 @@ async def app_lifetime_deps(event_loop, test_worker_config: AMQPWorkerConfig):
 
 
 @pytest.fixture(scope="session")
-async def es_test_client_session(app_lifetime_deps) -> ESClient:
-    # pylint: disable=unused-argument
+async def es_test_client_session(app_lifetime_deps) -> ESClient:  # noqa: ARG001,ANN001
     es = lifespan_es_client()
     await es.indices.delete(index="_all")
     await es.indices.create(index=TEST_PROJECT, body=_INDEX_BODY)
     return es
 
 
-@pytest.fixture()
+@pytest.fixture
 async def test_es_client(
     es_test_client_session: ESClient,
 ) -> ESClient:
@@ -90,7 +86,7 @@ async def test_es_client(
     return es
 
 
-@pytest.fixture()
+@pytest.fixture
 async def populate_es(
     test_es_client: ESClient, doc_0: Document, doc_1: Document
 ) -> list[Document]:
@@ -108,10 +104,10 @@ def index_docs_ops(
             "_op_type": "index",
             "_index": index_name,
         }
-        doc = doc.dict(by_alias=True)
-        op.update(doc)
-        op["_id"] = doc[ID]
-        op["routing"] = doc[DOC_ROOT_ID]
+        d = doc.model_dump(by_alias=True)
+        op.update(d)
+        op["_id"] = d[ID]
+        op["routing"] = d[DOC_ROOT_ID]
         op["type"] = ES_DOCUMENT_TYPE
         yield op
 

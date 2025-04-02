@@ -13,11 +13,21 @@ from icij_common.es import (
     ID_,
     SOURCE,
 )
-from icij_common.pydantic_utils import LowerCamelCaseModel, safe_copy
-from pydantic import Field, root_validator
+from icij_common.pydantic_utils import (
+    icij_config,
+    lowercamel_case_config,
+    merge_configs,
+    no_enum_values_config,
+    safe_copy,
+)
+from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
 
 from datashare_spacy_worker.utils import lower_camel_to_snake_case
+
+base_config = merge_configs(
+    icij_config(), no_enum_values_config(), lowercamel_case_config()
+)
 
 
 @unique
@@ -39,7 +49,9 @@ class Category(str, Enum):
     UNK = "UNKNOWN"
 
 
-class BatchDocument(LowerCamelCaseModel):
+class BatchDocument(BaseModel):
+    model_config = base_config
+
     id: str
     root_document: str
     project: str
@@ -51,7 +63,7 @@ class BatchDocument(LowerCamelCaseModel):
         return cls(
             project=project,
             id=es_doc[ID_],
-            root_id=sources[DOC_ROOT_ID],
+            root_document=sources[DOC_ROOT_ID],
             language=sources[DOC_LANGUAGE],
         )
 
@@ -66,14 +78,14 @@ class Document(BatchDocument):
         return cls(
             project=project,
             id=es_doc[ID_],
-            root_id=sources[DOC_ROOT_ID],
+            root_document=sources[DOC_ROOT_ID],
             language=sources[DOC_LANGUAGE],
             content=sources[DOC_CONTENT],
             content_length=sources[DOC_CONTENT_LENGTH],
         )
 
 
-class NlpTag(LowerCamelCaseModel):
+class NlpTag(BaseModel):
     start: int
     mention: str
     category: Category
@@ -86,21 +98,23 @@ SPACY_PIPELINE_NAME = "SPACY"
 _ID_PLACEHOLDER, _MENTION_NORM_PLACEHOLDER = "", ""
 
 
-class NamedEntity(LowerCamelCaseModel):
+class NamedEntity(BaseModel):
+    model_config = base_config
+
     id: str = _ID_PLACEHOLDER
     category: Category
     mention: str
     mention_norm: str = _ID_PLACEHOLDER
     document_id: str
     root_document: str
-    extractor: str = Field(default=SPACY_PIPELINE_NAME, const=True)
-    type: str = Field(default="NamedEntity", const=True)
+    extractor: str = Field(default=SPACY_PIPELINE_NAME, frozen=True)
+    type: str = Field(default="NamedEntity", frozen=True)
     extractor_language: str
     offsets: list[int]
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def generate_id(cls, values: dict) -> dict:
-        # pylint: disable=no-self-argument
         values = {lower_camel_to_snake_case(k): v for k, v in values.items()}
         provided_mention_norm = values.get("mention_norm")
         hasher = md5()

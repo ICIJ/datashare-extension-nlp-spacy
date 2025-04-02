@@ -1,7 +1,7 @@
 # pylint: disable=invalid-name
 from PyInstaller.utils.hooks import collect_data_files
 
-datas = collect_data_files("spacy", False)
+datas = collect_data_files("spacy", include_py_files=False)
 
 datas.extend(collect_data_files("spacy.lang", include_py_files=True))
 datas.extend(collect_data_files("spacy_lookups_data"))
